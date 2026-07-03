@@ -79,7 +79,10 @@ If you are a low-reasoning model (Haiku, DeepSeek Flash, MiniMax, etc.), follow 
 exactly — top to bottom, no judgement. Obey every **STOP** and **DEFAULT**. The rich
 Workflow below is the same loop for stronger models; this is the compiled version.
 
-1. `agf next --aco --select data.id` → got an id? **No** → check `code` in response:
+1. `agf next --select data.id` → got an id? (ACO is the smart-default now — plain `agf next`
+   already pulls via the pheromone roulette when the field is informative, deterministic on a
+   cold field; add `--no-aco` to force the deterministic sort, `--aco` to force the roulette.)
+   **No** → check `code` in response:
    - `NO_TASKS` + `hardBlocks[]` non-empty → skip blocked tasks (runtime missing); log
      each `requiredRuntime` and continue waiting — do NOT signal the planner as exhausted.
    - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate:
