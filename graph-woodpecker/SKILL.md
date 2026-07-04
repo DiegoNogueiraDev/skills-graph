@@ -6,10 +6,10 @@ triggers:
   - woodpecker
   - hunt-bugs
   - harden
-version: 1.1.0
+version: 1.2.0
 requires_agf: ">=0.20.0"
 author: Diego Nogueira
-date: 2026-06-28
+date: 2026-07-03
 tools_used:
   [
     scan-repos,
@@ -95,6 +95,20 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    > file that isn't on disk is a hallucination — file it as a finding and remediate (write the
    > missing file, or fix the reference via `agf node update <id> --test-files|--implementation-files
 <real files…>`). This is the hardening leg the graph-only gaps could not see.
+   >
+   > **A second, subtler phantom-value class: real code + real test, but the artifact never
+   > reaches its actual consumer.** File-existence triangulation only proves code and test
+   > exist — it does NOT prove the thing built ever ships. Found twice this session: a build
+   > script (`build-linux-packages.sh`) was fully implemented and covered by 7 real tests, yet
+   > was never called from any CI workflow — no user could ever download the artifact it
+   > produced. A packaging script (`pack-offline.mjs`) wrote a correctly-named file, but the
+   > release workflow's `gh release upload` step never included it, so it never reached the
+   > public release either. Whenever a finding is "a script/module exists and is tested,"
+   > trace the chain ONE HOP FURTHER: what invokes this in production (a CI workflow, a cron,
+   > an npm script)? Does THAT invocation actually run, and does its output reach the real
+   > consumer (a Release asset, a published package)? `grep` the script's own filename across
+   > `.github/workflows/*.yml` and any orchestrating shell script — zero hits means the tested
+   > code is dormant in the one place that matters.
 3. **File every finding as a node (never fix silently):**
    `agf node add --type bug "<symptom + file:line>"` for a defect; `--type risk` for a
    vuln/quality/observability gap. One node per flaw. No node → it does not get fixed.
@@ -125,6 +139,11 @@ Workflow below is the same loop for stronger models; this is the compiled versio
 silent, mark done on a false claim, or hold >1 `in_progress`.
 
 ## Golden Rules (woodpecker edition)
+
+> The full universal set lives in `_shared.md` → **Golden Rules (universal
+> engineering)** — obey it verbatim; the list below is the hardening-specific slice.
+> Sweep handoffs MUST follow `_shared.md` → **Close-out Report Format** (delivery
+> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
 
 1. **Find before you fix; reproduce before you trust.** A bug you cannot reproduce in a
    test is a hypothesis, not a defect. Differential debugging / bisection finds _when_;
@@ -178,6 +197,20 @@ agf provenance   # untracked/unattributed changes (audit trail gaps)
 Multi-modal sweep — each lens is blind to the others: types (harness), behavior (gaps),
 style/security (lint), history (insights/hotspots). Triangulate; don't trust one.
 
+**A sixth lens — sibling-diff, found while wiring dormant code (leafcutter harvest), not
+from any tool above.** When two modules implement the same concept and only one is wired,
+do NOT assume the wired one is correct by default — diff them. Twice in one session the
+dormant sibling turned out to encode the fix: a dormant module canonicalized a path via
+`realpath` before hashing while the wired one hashed the raw string (two callers reaching
+the same workspace through different symlink chains got different state dirs); a dormant
+tree-sitter enrichment module read a modifier token correctly (`.text`) while the shipped
+code compared the wrong field (`.type`) and silently dropped every modifier. Neither bug
+had a failing test — both codebases "worked," just wrong. Whenever a WIRE-task's target
+turns out to be superseded by a wired sibling, take five minutes to read the sibling's
+actual logic against the dormant one before closing the finding as "superseded" — the
+dormant code may be dormant *because it corrected a bug the wired copy still has*, not
+because it lost a race.
+
 ### Step 2 — FILE: every finding becomes a node (traceable, honest)
 
 ```bash
@@ -220,6 +253,24 @@ in code or error?), DoS (unbounded query/loop? add limit), Elevation (least priv
 Injection → parameterize; XSS → sanitize; path traversal → resolve+allowlist. Any new
 exposure → a `risk` node, never a silent acceptance.
 
+**Subprocess injection specifically:** `execSync`/`exec(`git ${args.join(' ')}`)` with
+any interpolated untrusted string is a shell-injection vector even if you shell-quote
+the one untrusted arg — that quoting is POSIX-specific and silently does not hold on
+Windows (different metacharacters). Prefer `execFileSync(cmd, args, opts)` — it never
+invokes a shell, so args reach the binary as literal argv with nothing to quote or
+escape, on any platform. Live-test the fix with an actual malicious payload
+(`'; touch /tmp/marker; echo '`) before and after, not just a lint pass.
+
+**A gate/heuristic you just added is itself a hardening target.** A newly-wired
+detector (regex, path pattern, threshold) can be too broad and generate friction that
+erodes trust in the DoD process — e.g. a "flag core modules needing corpus-scale
+tests" pattern that matched `(^|\/)core\//i` ended up matching almost every file under
+`src/core/`, forcing `--force` bypasses on legitimate work with zero true positives.
+When a gate fires repeatedly on work that is clearly fine, don't just `--force` past
+it every time — check whether the gate's own pattern is measurably too broad (count
+false positives this session), and narrow it with a regression test proving the
+narrowed pattern still catches the real case.
+
 ### Step 6 — CLOSE + LEARN
 
 ```bash
@@ -229,6 +280,13 @@ agf done <id>   ·   agf memory write pheromone-fix-<slug>   ·   agf heal
 Deposit the root cause + the fix + the gotcha as a pheromone trail so the next hunt skips
 the diagnosis you already paid for. `agf heal` clears graph noise. Then re-run Step 1 —
 the loop ends only when a full sweep finds nothing required.
+
+**At a sweep boundary, render the handoff per `_shared.md` → Close-out Report Format** —
+the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim graph-backed: `N testes ·
+<commit>`; a still-open finding gets its own row citing the `risk`/`bug` node; sweep row
+shows `test:node`/coverage) + Achado transversal + Honestidade + the decided next step
+(`Próximo: X — porque [fundamento]`, e.g. risco-primeiro = severity × blast radius). Obey
+that section verbatim — single source, do not re-improvise the format here.
 
 ## Anti-Patterns
 

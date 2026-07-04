@@ -288,3 +288,69 @@ Grades: A ≥ 85, B ≥ 70, C ≥ 55, D < 55.
 - **Missing node:** Criar via `agf node add` ANTES de codar
 - **Test failures:** Diagnosticar root cause, nunca pular testes
 - **Blocked task:** Resolver blockers ou `agf next` para a próxima desbloqueada
+
+---
+
+## Golden Rules (universal engineering — every graph-* skill obeys these)
+
+Distilled from real delivery loops. They are what makes two different users/models ship the SAME quality. Non-negotiable in PLAN, BUILD and HARDEN:
+
+1. **Investigate before you write — EXPAND, don't recreate.** `git log`/`git status` + graph (`agf preflight`/`search`) + `grep -rn` for the owning module FIRST. Extend what exists; net-new only when provably absent. Recreating is the #1 failure mode.
+2. **Spec is the source of truth for behavior.** When in doubt about ANY field/rule/layout, read the project's spec docs before implementing — never from memory. Spec ambiguous/silent? Document the assumption in the docblock + the close-out report, and flag it — never invent silently.
+3. **DRY / single source of truth.** One authoritative representation per fact (enum, mapping, helper). Seeing the same block twice → extract to the owning module and point both consumers at it.
+4. **TDD is mandatory.** RED (failing test from the AC) → GREEN (minimal code) → REFACTOR. No test = no implementation. UI surface without unit-test infra? Use a **static contract test**: a test in the main runner that `readFileSync`s the UI sources and asserts the AC (banned strings, exact option sets) — deterministic, runs in every blast.
+5. **Physical triangulation (anti-hallucination).** Done only counts when AC ↔ code on disk ↔ test on disk all agree. Self-reported "done" without physical files is a lie; `agf done` enforces it (PHANTOM_TESTFILE), never `--force` past it dishonestly.
+6. **Prove value in the consumer's mode.** Green units ≠ delivered. Exercise the path the real consumer uses (route mounted, flag default ON, tela wired). Dormant capability (exported-but-unconsumed, UI calling a nonexistent endpoint) is leaked value — wire it or file a node.
+7. **Honesty nodes.** Every loose end discovered mid-build becomes a `risk`/`bug`/`task` node BEFORE done. Pre-existing failures are proven pre-existing (`git stash -u` → rerun → pop), never absorbed silently.
+8. **Quality is a gate, not prose.** Files < 800 lines, functions < 50, 1 responsibility, no dead code/imports, structured logger (never console.* in prod code), typed errors. Legacy violations: don't grow them; bypass gates only with justification IN the commit message + a tracking node.
+9. **Deterministic sweeps over context dumps.** Locate/count/cross with `grep`/`sed`/`comm`/`jq` first; read whole files only to understand them. Output economy: diff-edits, `--select` projections, one `exec chain` over N round-trips.
+10. **Deposit pheromones.** After each task: `agf memory write pheromone-<slug>` with what worked + the gotchas (so the next iteration skips the diagnosis you already paid for), linked with `[[other-pheromone]]`.
+11. **Land on `main` — commit & push, no stray branch.** BUILD/HARDEN own git: branch-per-work → merge `main` → push → **delete the branch same session** (never leave orphan/unmerged work). PLAN never touches git — the graph (`graph.db`) is branch-agnostic. Stray branch = recurring cost + risk of lost work.
+12. **Single loop — never multi-agent / workflow fan-out.** Drive ONE loop; delegate inside it via `agf brief`/`agf submit`. Parallel agent swarms burn output tokens (the dominant cost) and have exhausted whole token budgets — forbidden unless the human explicitly asks that turn.
+13. **Enforcement = deterministic trigger, not "the agent remembers".** What must always hold descends into a gate that fires by itself: `agf check` (DoD) · `agf gate <phase>` · `PHANTOM_TESTFILE` on `agf done` · `agf lint-files` (800-line git gate). A rule with no trigger is a checklist, not enforcement.
+14. **Decide the next step (don't ask "which?").** Every cycle ends by choosing the single best next action and **naming the principle** that chose it — see Close-out Report Format below.
+
+### ↔ agf enforcement map (bind each rule to what mechanically delivers it)
+
+So any model honors the rules from the CLI alone — no reliance on memory:
+
+| Rule | agf mechanism that delivers/enforces it |
+|------|-----------------------------------------|
+| 1 investigate / EXPAND | `agf preflight "<topic>"` (git+graph+WIP) · `agf search`/`agf query`/`agf code search` · `agf wire-dormant --ingest` |
+| 2 spec = source of truth | read spec docs / `agf context <id>` before coding; assumption → docblock + close-out |
+| 3 DRY / single source | `contract` node = authoritative shape · RAG-OUT `agf montar-output` caches scaffold |
+| 4 TDD mandatory | `agf check` (DoD) · `agf tdd-score` · `npm run test:blast` gate |
+| 5 physical triangulation | `agf gaps --kind phantom_done` + `PHANTOM_TESTFILE` on `agf done` (testFiles **and** implementationFiles on disk) |
+| 6 prove value in consumer mode | DELIVERY TABLE `Prova` (receipt + commit) + reproduce via consumer path · `agf metrics`/`agf savings` (real numbers) |
+| 7 honesty nodes | `agf node add --type risk\|bug` **before** `done`; pre-existing failure proven via `git stash -u`→rerun→pop |
+| 8 quality is a gate | `agf harness --violations` · `agf lint-files` (files<800/fn<50/no dead code/typed errors) |
+| 9 deterministic sweeps + economy | `agf … --select <path>` · `agf exec chain` · `agf compress` (external output) · diff-edits |
+| 10 pheromones | `agf memory write pheromone-<slug>` (rule + when to discard; code/graph beat memory) |
+| 11 git on main | BUILD/HARDEN own git (branch→merge→push→delete); PLAN never touches git |
+| 12 single loop | `agf brief`/`agf submit` (delegate in-loop, no swarm) |
+| 13 deterministic enforcement | `agf check` · `agf gate <phase>` · `agf done` (PHANTOM_TESTFILE) · `agf lint-files` git gate |
+| 14 decide next step | Close-out `Próximo: X — porque [fundamento]` (below) |
+
+---
+
+## Close-out Report Format (end of every cycle/epic — rule 14: decide, don't ask)
+
+Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying:
+
+```markdown
+## Resumo do loop
+
+**N tasks + M épicos promovidos** (grafo: X→Y done), tudo com TDD, blast verde e push na main:
+
+| Entrega | O quê | Prova |
+|---------|-------|-------|
+| **<ID> <título curto>** | 1-2 frases do que mudou e POR QUÊ (o valor, não o diff) | <n> testes · `<commit-hash>` |
+
+**Achado transversal:** (se houver) o padrão/bug de classe descoberto que atravessa entregas — a informação que o humano não pediu mas precisa saber.
+
+**Honestidade:** assunções documentadas, nodes de risco criados (`node_xxx`), violações pré-existentes bypassed com justificativa.
+
+**Próximo: <TASK> — porque [fundamento nomeado]** (ROI/maior-alavanca · Pareto 80/20 · TOC/gargalo · risco-primeiro · ordem-de-dependência · dado medido). Siga nele por padrão; alternativas só como nota curta, nunca como pergunta aberta.
+```
+
+Rules of the format: **lead with the outcome**; every claim carries a physical proof (test count + commit hash); transversal findings get their own line; the next step is a DECISION with a named principle, not a menu of options. Exception: genuinely-the-human's calls (cost, scope, irreversible risk) — then ask, but with your recommendation first.

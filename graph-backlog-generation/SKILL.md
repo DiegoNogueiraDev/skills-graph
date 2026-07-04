@@ -5,9 +5,9 @@ triggers:
   - graph-backlog-generation
   - gerar-backlog
   - criar-prd
-version: 2.3.0
+version: 2.4.0
 author: Diego Nogueira
-date: 2026-06-28
+date: 2026-07-03
 tools_used:
   [
     deliver,
@@ -103,6 +103,11 @@ AC has no concrete, checkable value.
 
 ## Golden Rules (planner edition)
 
+> The full universal set lives in `_shared.md` → **Golden Rules (universal
+> engineering)** — obey it verbatim; the list below is the planner-specific slice.
+> Each planning handoff MUST follow `_shared.md` → **Close-out Report Format**
+> (what was injected + proof + `Próximo: X — porque [fundamento]`).
+
 The project's golden rules, distilled for ANALYZE/DESIGN/PLAN. Non-negotiable:
 
 1. **Investigate first, never duplicate.** `agf preflight "<theme>"` + scan existing
@@ -183,10 +188,37 @@ scan is on by default; never use `--no-security-check`.
 > over `src`; the investigation still completes, just less compressed.
 
 The deliverable of this step is **white space**: value that is real, grounded in
-findings, and NOT already covered by an existing epic or in-flight by another agent.
+findings, and NOT already covered by an existing epic or in-flight by another epic.
 A backlog of 1000+ nodes is normal — the planner's hardest job is _not adding
 duplicates_. Prefer wiring dormant/partial code over net-new (golden rule); the
 strongest epics come from code that existed but was unwired.
+
+**Surface C — WIRE-tasks the builder already blocked with a real finding.** The
+builder (graph-builder-leafcutter) triages `wire-dormant` harvest output into 5
+buckets; only one is a mechanical wire it can close alone. The other four land as
+`blocked` nodes with the investigation already written in the description — this is
+**pre-digested planning material**, cheaper to consume than a fresh repomix pass:
+
+```bash
+agf query --type task --status blocked --select 'data[].{id,description}'
+```
+
+Group what you find by finding-shape, not by reading each node cold:
+
+- **Half an epic** (mechanism ready, no consumer built) → usually a real, scopeable
+  epic on its own: decompose the missing consumer as tasks with AC.
+- **Systemic scaffolded family** (N files, same shape, one root cause) → **one**
+  epic/decision covering all N, never N separate tasks — the builder already named
+  the whole family in one of the blocked nodes; don't re-derive it file by file.
+- **Overlaps an already-wired system** → usually NOT an epic; either retire the
+  dormant module (a `task` to delete it) or scope a narrow task for just the
+  non-overlapping differentiator the finding already named.
+- **Superseded by a sibling** → usually a cleanup task (retire the loser), not a
+  feature epic — verify the finding's claim (`agf harness --dormant`) before trusting
+  it blind, since a stale finding may have been fixed since.
+
+A blocked node with no finding text (just the harvest boilerplate, never triaged) is
+still raw signal — treat it like an untriaged repomix hotspot, not pre-digested.
 
 ### Step 2 — Frame the problem & confirm direction
 
@@ -343,6 +375,14 @@ When the PRD is complete and DoR passes, **STOP and present it** for the **Three
 sign-off** — the human (Product + Test) may interrupt, adjust scope, or approve. On
 approval, the next cycle re-enters Step 1, seeded by the freshly-updated project
 findings (continuous dogfood evolution).
+
+**Close by DECIDING the next step** (`_shared.md` rule 14 — decide, don't ask). The planner
+delivers backlog, not code, so it has no DELIVERY TABLE; instead recommend the SINGLE
+epic/task the builder should attack first, with the named principle: **`Próximo: run
+graph-builder-leafcutter começando por X — porque [fundamento]`** (e.g. "por E1 do
+walking-skeleton — porque ordem-de-dependência: todo o resto depende dele"; WSJF/Pareto
+also apply here). Alternatives as a one-line note, never an open question — except a
+genuinely owner-only call (scope / cost / risk), where you ask with your recommendation first.
 
 ## Anti-Patterns
 

@@ -208,6 +208,26 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
 - For a genuinely trivial task you may collapse this into `agf start` (next +
   context + in_progress), but never skip the `rg`/`search` reuse check.
 - Delegating? `agf brief <id>` emits the spec; close with `agf submit <id> --result <json>`.
+- **GOTCHA — Commander.js silently drops a subcommand's own flag when the parent
+  command defines the same flag name.** A parent `Command` and a `.addCommand()`-
+  attached subcommand both declaring e.g. `-d, --dir` causes Commander to silently
+  fall back to the parent's default, ignoring the value passed after the subcommand
+  name — no error, just wrong data flowing downstream. Reproduce it in isolation with
+  a throwaway `node -e` script before assuming the bug is elsewhere. Fix: add
+  `.enablePositionalOptions()` to the parent `Command` (options before the subcommand
+  name bind to the parent, options after bind to the subcommand). Found and fixed
+  twice in this codebase (`context-cmd.ts`, `loop-cmd.ts`) — check for it whenever a
+  new subcommand under an existing parent command misbehaves on a flag that "should"
+  work.
+- **GOTCHA — a lifecycle/process port taking a `pid: number` must guard `pid > 0`
+  before calling `process.kill`/`kill(pid, sig)`.** Unix `kill()` treats `pid === 0`
+  as "signal the entire process group" and negative pid as "signal a process group by
+  id" — never a single-process target. A registry that persists `pid` before the real
+  spawned pid is known (e.g. registering, then spawning) can silently write `0`,
+  turning a later `stop`/`kill` into a broadcast that can take down the caller's own
+  shell. Whenever you wire a stop/kill path for a background process: (1) persist the
+  pid only AFTER the real spawn resolves, never before, and (2) guard the kill call
+  itself with `if (pid > 0)` as defense in depth.
 
 ### Step 3 — BUILD with economy (TDD + Clean Code/SOLID)
 
@@ -294,6 +314,55 @@ When no unblocked task remains, **harvest before stopping** — `agf autopilot` 
 (or the manual pass in Step 1) — it collapses AC-nodes, surfaces risks, and turns dormant
 capabilities into WIRE-tasks, re-feeding the loop. Only when the harvest is **also** dry do
 you signal `graph-backlog-generation` to inject the next cycle, then resume the loop.
+
+**WIRE-task triage — a harvest hit is raw output, not a pre-validated backlog.** Before
+touching code, classify the dormant module into one of five buckets; only the first is a
+mechanical wire, the rest are honest `blocked` findings:
+
+1. **False positive — check `src/tests/` before anything else.** The dormant-scanner only
+   walks CLI/TUI/MCP/web surfaces; it cannot see that a module is a deliberate test-only
+   fixture/stub. `grep -rln "<exportedSymbol>" src/tests/*.ts` first — if a real test
+   imports and exercises it (not just re-exports), close the node immediately as a
+   confirmed false positive, no further investigation needed.
+2. **Superseded, not incomplete.** A sibling module already solves the same problem
+   better (and is the one actually wired) — e.g. an in-memory prototype replaced by a
+   SQLite-backed store, or a naive regex duplicate replaced by a tokenize+stopword+Jaccard
+   version. Tell-tale sign: the REAL wired module's own docblock explains why the dormant
+   one can't work here ("each command is a fresh process, so the in-memory X cannot
+   survive between tasks"). Forcing a wire here would be a regression, not a fix — block
+   it citing the superior sibling.
+3. **Half an epic.** The mechanism is complete and well-designed, but the consumer it was
+   built for was never built (a docblock naming a specific caller that doesn't exist or
+   doesn't call it; a whole plugin/subsystem directory with zero registry wiring). Building
+   the missing consumer from scratch is planning-scale work — block it, name the missing
+   piece precisely, and let the planner decide whether to build it.
+4. **Systemic scaffolded family.** Multiple files share the exact same shape/purpose across
+   different lifecycle-phase directories (e.g. one `validation.ts` per phase, all Zod
+   schemas for the same never-built tool surface). Don't triage these one at a time — name
+   the whole family in the first finding and block the rest with a one-line cross-reference,
+   so the planner makes ONE decision instead of N.
+5. **Overlaps an already-wired system.** A "generic engine" whose built-in rules duplicate
+   a hardcoded checker that's already live (e.g. a configurable architecture-rule engine
+   vs. the harness's own hardcoded fitness functions). Shipping it as a second, parallel
+   surface confuses users more than leaving it dormant — find the one genuinely
+   differentiating capability (if any) and scope a wire to *only* that, or block with the
+   overlap named explicitly.
+
+**Only bucket 0 (genuine, safe mechanical wire) gets code.** Two safe sub-patterns worth
+naming: (a) a **typed-error swap** — a dormant `XError extends GraphError` almost always has
+a real throw-site in the sibling module matching its name-prefix (`grep "throw new
+McpGraphError" <sibling-dir>`); safe to swap when no `instanceof` check on the generic type
+exists anywhere and both extend the same base — update the one test that asserts the old
+type, that's intentional, not a regression. (b) **new standalone command** — when a pure,
+already-correct function has no natural existing call site (the flow that "should" call it
+is detection-only, or forcing it into a tested flow risks behavior change), add a small new
+`agf <verb> <arg>` command rather than bending an existing one. Zero risk: nothing calls it
+unless a user explicitly does.
+
+**Rigor check when a wire's integration test passes green on the first run** (no visible
+RED): don't just trust it — `git stash -- <implementation-file>` to temporarily remove the
+wire, re-run the test to confirm it now fails for the right reason, then `git stash pop`.
+Proves the test is actually anchored to your change, not passing by coincidence.
 
 ## Anti-Patterns
 
