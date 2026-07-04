@@ -6,10 +6,10 @@ triggers:
   - leafcutter
   - golden-wren
   - build-loop
-version: 2.4.0
+version: 2.5.0
 requires_agf: '>=0.20.0'
 author: Diego Nogueira
-date: 2026-06-28
+date: 2026-07-03
 tools_used:
   [
     start,
@@ -110,6 +110,13 @@ false claim, or hold >1 task `in_progress`.
 
 ## Golden Rules (builder edition)
 
+> The full universal set (spec-first, single-source DRY, static contract tests for
+> UI without unit infra, physical AC↔code↔test triangulation, prove-value-in-the-
+> consumer's-mode, honesty nodes) lives in `_shared.md` → **Golden Rules (universal
+> engineering)** — obey it verbatim; the list below is the builder-specific slice.
+> The cycle handoff MUST follow `_shared.md` → **Close-out Report Format** (delivery
+> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
+
 The project's golden rules, distilled for IMPLEMENT. Non-negotiable:
 
 1. **Investigate & reuse before writing.** `agf preflight` + `rg`/`agf search` for the
@@ -178,6 +185,14 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
   lever usually already exists — find it and extend the owning module. Greenfield
   `agf scaffold <name>` is the exception, not the default. Recreating from scratch
   is the most common failure here (violates DRY + the golden rule).
+- **A task says "write a build script" but the logic belongs in the tested core.**
+  When a standalone script (a bundler `.mjs`, a CI helper) **cannot import the compiled
+  core** (bundled entrypoints, not per-module output), do NOT re-implement the logic
+  inside the script — that duplicates it AND leaves the tested core **dormant** (rule 9).
+  Put the pure logic in the core (DIP-injected I/O, unit-tested), expose it as a **CLI
+  command** that reuses it, and let the script/CI be a one-liner that calls the command.
+  A shipped command must also be **discoverable** — register it wherever the context/RAG
+  index derives from, or it stays invisible to the next agent even though it runs.
 - **`preflight` returns `duplicate-risk` matching the picked task ITSELF — that is
   expected.** Only stop for an _other_ node match or a `wip-conflict` verdict.
 - **GOTCHA — `agf next` has NO epic/tag/session scope.** It picks 100% globally by
@@ -241,8 +256,12 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
   gate) even though blast passes standalone. Workaround: run blast standalone for
   real coverage (above), then give `done` a _targeted_ receipt:
   `agf done --test-cmd "npx vitest run <changed-area test files>"`.
-
-**Honesty — surface loose ends as nodes; never fake-pass:**
+- **Closing a `risk`/spec node whose mitigation you just built:** the task-DoD `done`
+  gate requires acceptance criteria, and a `risk` node has none — so `agf done` will
+  fail on `has_acceptance_criteria`. That is a node-shape mismatch, NOT a false pass:
+  the honest signal is your real gates (blast + `check` + `harness` green + the test
+  proving the behavior). Close it with the raw forward transition (`agf node status
+<id> done`), not `agf done`. Never invent AC just to satisfy the task gate.
 
 - Pre-existing failure, a bug you discovered, or a deferred integration →
   `agf node add --type risk|task …` **before** `done`. Then complete your task on
@@ -261,6 +280,13 @@ Deposit a pheromone trail for what worked **and the gotchas you hit** (so the ne
 iteration skips the diagnosis you already paid for); link related trails with
 `[[other-pheromone]]`. Weak trails decay. `agf heal` self-repairs graph noise.
 Then loop to Step 1.
+
+**At a batch/cycle boundary (before handing back), render the handoff per `_shared.md` →
+Close-out Report Format** — the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim
+graph-backed: `N testes · <commit>`; blocked items get their own row citing the honesty
+node; epics show `test:node` promotion) + Achado transversal + Honestidade + the decided
+next step (`Próximo: X — porque [fundamento]`). Obey that section verbatim — it is the
+single source; do not re-improvise the format here.
 
 ### Step 6 — Exhaustion → harvest → restart
 
