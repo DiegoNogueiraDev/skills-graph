@@ -1,6 +1,6 @@
 ---
 name: graph-woodpecker
-description: Use when you want to HARDEN the codebase — hunt and fix bugs, find and fix security vulnerabilities, catch quality rot, close logging/observability blind spots, and raise test coverage to ≥80% — end-to-end and autonomously, with every finding tracked as a graph node and every fix proven by a regression test. The third pillar after graph-backlog-generation (PLAN) and graph-builder-leafcutter (BUILD): this is HARDEN. NOT for planning a PRD (graph-backlog-generation) or building new features from the backlog (graph-builder-leafcutter). Triggers — graph-woodpecker, woodpecker, find bugs, fix bugs, hunt bugs, security audit, fix vulnerability, OWASP, STRIDE, quality audit, tech debt, raise coverage, add observability, logging gaps, achar bugs, corrigir bugs, falha de segurança, auditoria de qualidade, cobertura de testes, observabilidade, endurecer, hardening.
+description: "Use when you want to HARDEN the codebase — hunt and fix bugs, find and fix security vulnerabilities, catch quality rot, close logging/observability blind spots, and raise test coverage to ≥80% — end-to-end and autonomously, with every finding tracked as a graph node and every fix proven by a regression test. The third pillar after graph-backlog-generation (PLAN) and graph-builder-leafcutter (BUILD): this is HARDEN. NOT for planning a PRD (graph-backlog-generation) or building new features from the backlog (graph-builder-leafcutter). Triggers — graph-woodpecker, woodpecker, find bugs, fix bugs, hunt bugs, security audit, fix vulnerability, OWASP, STRIDE, quality audit, tech debt, raise coverage, add observability, logging gaps, achar bugs, corrigir bugs, falha de segurança, auditoria de qualidade, cobertura de testes, observabilidade, endurecer, hardening."
 triggers:
   - graph-woodpecker
   - woodpecker
@@ -165,6 +165,16 @@ silent, mark done on a false claim, or hold >1 `in_progress`.
    metrics on hot paths (RED: Rate/Errors/Duration · USE: Utilization/Saturation/Errors).
 8. **Honesty + dogfood.** Surface every loose end as a node; never fake-pass; in-repo use
    `npm run dev -- <cmd>`, never the stale installed binary.
+9. **A guard is only a guard while it can still fail.** A mass rename or codemod rewrites
+   the test alongside the code, and the test stays green — because it now asserts a
+   tautology. The classic shape: a guard strips the allowed exception from a string, then
+   greps the remainder for the forbidden term. Rename the term and the grep can never
+   match again; the assertion passes for every input, forever, and nothing tells you.
+   After any sweep that touches an assertion, **prove each guard still bites**: put the
+   forbidden thing back — into the artifact the guard actually reads, not merely into a
+   file whose name resembles it — and watch it go red. A guard that has never been seen
+   to fail has not been tested; it has been assumed. Applies equally to the guards you
+   write today: the first run of a new guard must be RED, before the fix exists.
 
 ## Mandatory Flow
 
@@ -293,6 +303,11 @@ that section verbatim — single source, do not re-improvise the format here.
 - Do NOT fix without a reproducing test — that is a guess, not a fix
 - Do NOT fix the symptom — 5 Whys to the root cause, fix that
 - Do NOT lower a gate (test, lint, coverage threshold) to go green — fix the code
+- Do NOT raise a warning ceiling to silence a red gate — that moves the goalpost, and the
+  next reader inherits a number that measures nothing
+- Do NOT let a sweep (rename, codemod, find-and-replace) run over a test without proving
+  the test can still fail afterwards — a rewritten assertion goes green by becoming empty
+- Do NOT trust a guard whose failing run you have never seen
 - Do NOT leave a failure path silent — log + metric is part of the fix
 - Do NOT accept a found vulnerability without a `risk` node and a fix or explicit deferral
 - Do NOT plan features or build new backlog here — that is the other two skills
