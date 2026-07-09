@@ -21,8 +21,9 @@ o `agf` obriga o trabalho a fluir por um grafo: cada tarefa vira um nó com crit
 segue TDD (Red → Green → Refactor) e só é dada como concluída quando **AC ↔ código ↔ teste** batem no disco.
 
 Este repositório contém **apenas as 3 skills do ciclo de vida + os protocolos compartilhados** — a camada
-de conhecimento que ensina o agente *como* conduzir cada fase. Elas são o mesmo bundle distribuído em
-[graph-flow.cloud](https://graph-flow.cloud) (`skills.zip`), versionado aqui para acesso público e histórico.
+de conhecimento que ensina o agente *como* conduzir cada fase. **Este repositório é a fonte pública**:
+clone-o, não baixe um arquivo compactado. Um `git clone` diz exatamente qual versão você tem e permite
+`git pull` amanhã; um `.zip` não diz nem uma coisa nem outra.
 
 ## De onde nasceu
 
@@ -54,7 +55,7 @@ As três skills abaixo são a destilação desse ciclo em linguagem que qualquer
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://graph-flow.cloud/install.sh | sh
+curl -fsSL https://graph-flow.cloud/install.sh | bash
 ```
 
 **Windows (PowerShell):**
@@ -68,7 +69,7 @@ Depois, `agf upgrade` mantém você sempre na última versão.
 
 ### 2. Instale as skills (cross-agents)
 
-Clone este repositório (ou baixe o `skills.zip` do site) e copie as pastas para o diretório de skills do seu agente:
+Clone este repositório e copie as pastas para o diretório de skills do seu agente:
 
 ```bash
 git clone https://github.com/DiegoNogueiraDev/skills-graph.git
@@ -108,4 +109,4 @@ ou *"endureça o código / ache bugs"* (**HARDEN**).
 ## Licença
 
 Distribuído como parte do agent-graph-flow. Uso livre para operar o `agf`.
-Documentação e download: **[graph-flow.cloud](https://graph-flow.cloud)**.
+Documentação: **[graph-flow.cloud](https://graph-flow.cloud)**.

@@ -171,7 +171,7 @@ Grades: A (85-100%), B (70-84%), C (55-69%), D (<55%).
 **Regra dura:** TODO comando de shell — `git`, `ls`, `dir`, `cat`, `grep`/`rg`, `find`, `npm`/`pnpm`, `cargo`, build, test, **PowerShell**, etc. — passa pela compressão determinística do agf antes de você LER a saída. Saída bruta de shell = tokens desperdiçados.
 
 - `agf compress run -- <cmd>` — roda o comando e comprime o stdout (ou `cmd | agf compress run --stdin`). Reversível via `agf retrieve <hash>` (CCR).
-- `agf compress` / `agf rtk` — mesma engine; `discover` (acha filtros) · `test <file>` (preview). Nunca envolva `agf` em `agf compress` — a saída do próprio agf já é mínima.
+- `agf compress` — a engine de compressão; `discover` (acha filtros) · `test <file>` (preview). Nunca envolva `agf` em `agf compress` — a saída do próprio agf já é mínima.
 - `agf compress discover` — descobre filtros automáticos
 - `agf compress test <file>` — comprime output de teste
 

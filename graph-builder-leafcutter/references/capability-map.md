@@ -127,7 +127,7 @@ from env vars; tier-router (cheap→build→frontier) or `--pin <model>`.
 `agf economy on|off|list <lever>` (opt-in bio/math levers: `ncd_dedup`, `forage_stop`,
 `mdl_select`, `heat_kernel`, `budget_kleiber`, `info_bottleneck`, `memory_salience`…) ·
 `agf metrics --economy-report` · `agf savings [--reset]` · `agf calibrate` (RAG gate
-threshold) · `agf compress` / `agf rtk` (tool-output compressor) · `agf retrieve <hash>`
+threshold) · `agf compress` (tool-output compressor) · `agf retrieve <hash>`
 (rescue a CCR-dropped original) · `agf retrieve-command` / `agf montar-output` (RAG-IN/OUT)
 · `agf usage` (analytics → auto-wrappers).
 
