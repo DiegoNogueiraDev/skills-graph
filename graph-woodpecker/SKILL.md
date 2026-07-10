@@ -1,13 +1,13 @@
 ---
 name: graph-woodpecker
-description: "Use when you want to HARDEN the codebase — hunt and fix bugs, find and fix security vulnerabilities, catch quality rot, close logging/observability blind spots, and raise test coverage to ≥80% — end-to-end and autonomously, with every finding tracked as a graph node and every fix proven by a regression test. The third pillar after graph-backlog-generation (PLAN) and graph-builder-leafcutter (BUILD): this is HARDEN. NOT for planning a PRD (graph-backlog-generation) or building new features from the backlog (graph-builder-leafcutter). Triggers — graph-woodpecker, woodpecker, find bugs, fix bugs, hunt bugs, security audit, fix vulnerability, OWASP, STRIDE, quality audit, tech debt, raise coverage, add observability, logging gaps, achar bugs, corrigir bugs, falha de segurança, auditoria de qualidade, cobertura de testes, observabilidade, endurecer, hardening."
+description: 'Use when you want to HARDEN the codebase — hunt and fix bugs, find and fix security vulnerabilities, catch quality rot, close logging/observability blind spots, and raise test coverage to ≥80% — end-to-end and autonomously, with every finding tracked as a graph node and every fix proven by a regression test. The third pillar after graph-backlog-generation (PLAN) and graph-builder-leafcutter (BUILD): this is HARDEN. NOT for planning a PRD (graph-backlog-generation) or building new features from the backlog (graph-builder-leafcutter). Triggers — graph-woodpecker, woodpecker, find bugs, fix bugs, hunt bugs, security audit, fix vulnerability, OWASP, STRIDE, quality audit, tech debt, raise coverage, add observability, logging gaps, achar bugs, corrigir bugs, falha de segurança, auditoria de qualidade, cobertura de testes, observabilidade, endurecer, hardening.'
 triggers:
   - graph-woodpecker
   - woodpecker
   - hunt-bugs
   - harden
 version: 1.2.0
-requires_agf: ">=0.20.0"
+requires_agf: '>=0.20.0'
 author: Diego Nogueira
 date: 2026-07-03
 tools_used:
@@ -218,7 +218,7 @@ code compared the wrong field (`.type`) and silently dropped every modifier. Nei
 had a failing test — both codebases "worked," just wrong. Whenever a WIRE-task's target
 turns out to be superseded by a wired sibling, take five minutes to read the sibling's
 actual logic against the dormant one before closing the finding as "superseded" — the
-dormant code may be dormant *because it corrected a bug the wired copy still has*, not
+dormant code may be dormant _because it corrected a bug the wired copy still has_, not
 because it lost a race.
 
 ### Step 2 — FILE: every finding becomes a node (traceable, honest)

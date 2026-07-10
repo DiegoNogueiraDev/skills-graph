@@ -345,7 +345,7 @@ mechanical wire, the rest are honest `blocked` findings:
    a hardcoded checker that's already live (e.g. a configurable architecture-rule engine
    vs. the harness's own hardcoded fitness functions). Shipping it as a second, parallel
    surface confuses users more than leaving it dormant — find the one genuinely
-   differentiating capability (if any) and scope a wire to *only* that, or block with the
+   differentiating capability (if any) and scope a wire to _only_ that, or block with the
    overlap named explicitly.
 
 **Only bucket 0 (genuine, safe mechanical wire) gets code.** Two safe sub-patterns worth
