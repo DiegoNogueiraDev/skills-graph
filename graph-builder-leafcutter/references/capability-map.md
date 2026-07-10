@@ -70,7 +70,7 @@ and (where it lists) `--json` for token economy.
 | Definition of Done checks               | `agf check <id>`                                        |
 | Phase-readiness gates                   | `agf gate <design\|review\|handoff\|deploy\|listening>` |
 | Quality gate 95/95                      | `agf quality`                                           |
-| Agent-readiness score (8 dims, A–D)     | `agf harness [--saturation]`                            |
+| Agent-readiness score (9 dims, A–D)     | `agf harness [--saturation]`                            |
 | TDD quality score 0–100                 | `agf tdd-score <id>`                                    |
 | Run affected tests / lint (graph-aware) | `agf test` · `agf lint`                                 |
 | Tokens/$ + cost-per-success             | `agf metrics [--economy-report]`                        |

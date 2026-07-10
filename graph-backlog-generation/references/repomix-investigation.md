@@ -48,7 +48,7 @@ _not_ planning work there (Lean: no overproduction).
 ## Scope to a subsystem (drill down without the rest)
 
 ```bash
-repomix --include "src/core/economy/**,src/core/llm/**"   # only these areas
+repomix --include "src/<area>/**,src/<other-area>/**"   # only these areas
 repomix -i "**/*.test.ts,docs/**,**/*.snap"               # exclude noise
 repomix --include "src/**" --compress --remove-empty-lines --stdout   # lean structure of src only
 repomix --stdin < filelist.txt                            # pack an exact file list (e.g. from agf/grep output)

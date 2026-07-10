@@ -79,9 +79,8 @@ If you are a low-reasoning model (Haiku, DeepSeek Flash, MiniMax, etc.), follow 
 exactly — top to bottom, no judgement. Obey every **STOP** and **DEFAULT**. The rich
 Workflow below is the same loop for stronger models; this is the compiled version.
 
-1. `agf next --select data.id` → got an id? (ACO is the smart-default now — plain `agf next`
-   already pulls via the pheromone roulette when the field is informative, deterministic on a
-   cold field; add `--no-aco` to force the deterministic sort, `--aco` to force the roulette.)
+1. `agf next --select data.id` → got an id? (Plain `agf next` sorts by strict priority — that is the
+   default. Pheromone selection is opt-in with `--aco`, reproducible with `--seed <n>`.)
    **No** → check `code` in response:
    - `NO_TASKS` + `hardBlocks[]` non-empty → skip blocked tasks (runtime missing); log
      each `requiredRuntime` and continue waiting — do NOT signal the planner as exhausted.
@@ -104,6 +103,14 @@ Workflow below is the same loop for stronger models; this is the compiled versio
 9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk …`,
    then `agf done <id> --test-cmd "npx vitest run <your test file>"`.
 10. `agf memory write pheromone-<slug>` (what worked **+ the gotcha**) → go to 1.
+
+**Close the node before you commit, one task at a time.** `agf done` reads the _working tree_:
+it refuses a clean tree (`NO_FILES_MODIFIED` — nothing was implemented) and it refuses files the
+node never declared (surgical scope). Batch a whole epic into one dirty tree and the two gates
+contradict each other — the only way out is `--force`, which also skips the tests. So: edit one
+task's files → `agf done <id>` → commit → next task. Declare what you touched with
+`agf node update <id> --implementation-files … --test-files …`; `agf gaps --kind phantom_done`
+checks those paths against the disk, and a `done` without them is a hallucination.
 
 **Never:** plan/PRD, create a file that already exists, mark done with a red gate or a
 false claim, or hold >1 task `in_progress`.

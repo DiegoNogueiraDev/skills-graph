@@ -23,12 +23,13 @@ graph-economy levers.
 
 1. **Colony scan** — `agf stats` · `agf harness --saturation` · `agf gaps` · `agf learning stats`.
 2. **Generate/select** — if backlog empty, signal `graph-backlog-generation`; else select by fitness.
-3. **Pull one** — `agf next` (do NOT claim yet). **ACO is the smart-default:** with no flag,
-   `agf next` / `agf start` pull via the pheromone-weighted roulette whenever the trail field
-   is informative, and fall back to the deterministic priority sort on a cold/flat field —
-   you no longer pass `--aco` to get ACO. Overrides: `--aco` forces the roulette even on a cold
-   field, `--no-aco` forces the deterministic sort, `--seed <n>` makes the roulette reproducible.
-   Enforcement lives in the command, not in remembering to add a flag.
+3. **Pull one** — `agf next` (do NOT claim yet). **The default is deterministic, and `--aco` is opt-in.**
+   Plain `agf next` / `agf start` sort by strict priority. The roulette was once the default and it
+   was reverted: pheromone weight overrode priority, and a priority-3 task was observed being pulled
+   ahead of a priority-2 one. A weak or delegated model following `agf next` blindly needs the safe path
+   to be the predictable one. Overrides: `--aco` opts into the pheromone-weighted roulette, `--no-aco`
+   states the default explicitly, `--seed <n>` makes the roulette reproducible. A system that learns
+   also errs, so you must be able to turn it off.
 4. **Investigate & reuse** — `agf preflight` + `rg`/`agf search` for the owning module;
    EXPAND, don't recreate (see engineering-practices.md). Then `agf node status <id> in_progress`.
 5. **Build** — TDD Red→Green→Refactor with the economy arsenal below + Clean Code/SOLID.

@@ -5,7 +5,15 @@ System file. Not a skill itself. Referenced by lifecycle and domain skills via `
 **Skills não duplicam mais esta seção.** Cada skill tem apenas 4 linhas de referência compacta.
 Consulte esta seção para detalhes completos de economia de tokens, perfis e anti-padrões.
 
-**CLI-first:** every workflow drives the `agf` CLI — there is NO MCP server. Commands below are real `agf <cmd>` invocations.
+**CLI-first:** every workflow drives the `agf` CLI — there is NO MCP server. Commands below are real `agf <cmd>` invocations. A skill that names an MCP tool is rejected by the test suite — that tool is not mounted in a real session, so the agent either errors or invents the result.
+
+**Companion protocols** — read the one the task needs, not all three:
+
+| Protocol                                                     | Read it when                                                                                                      |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| [`_rag-protocol.md`](_rag-protocol.md)                       | You need the token-economy contract: `--ai`, `--select`, `agf retrieve-command`, `agf exec chain`, `agf compress` |
+| [`_pilot-protocol.md`](_pilot-protocol.md)                   | You are driving an executor and must hand it a brief it cannot misread                                            |
+| [`_pilot-protocol-template.md`](_pilot-protocol-template.md) | You are filling that brief in — it is the skeleton, with `<fill: …>` slots                                        |
 
 ---
 
@@ -78,7 +86,7 @@ agf next → agf context <id> → [TDD] → agf check <id> → agf node status <
 | Validar antes de fechar                                                   | `agf check <id>` (DoD) → `agf done <id>` (blast gate)                    |
 | Delegar uma task a um executor                                            | `agf brief <id>` → executor → `agf submit <id> --result`                 |
 | Achar lacunas de completude (req↔task↔test, AC, NFR)                      | `agf gaps --severity required --select data`                             |
-| Medir prontidão/qualidade do código                                       | `agf harness` (8 dimensões, A–D)                                         |
+| Medir prontidão/qualidade do código                                       | `agf harness` (9 dimensões, A–D)                                         |
 | Encadear vários passos agf (1 round-trip)                                 | `agf exec chain "a; b; c"` · `agf exec pipe`                             |
 | **Rodar QUALQUER shell** (git/ls/dir/grep/find/cat/test/build/powershell) | **`agf compress run -- <cmd>`** (hookless) · Claude Code = hook auto     |
 | Ver/gerenciar o cache de prompt (RAG-cache)                               | `agf cache stats` (hit rate, tokens/$ poupados) · `agf cache plan-store` |
@@ -276,7 +284,7 @@ agf compress test src/tests/foo.test.ts
 
 ## Harness Engineering
 
-Agent Readiness Score (0-100). 8 dimensões: Type Coverage (25%), Test Coverage (25%), Architecture Fitness (15%), Docs Coverage (10%), Naming Clarity (10%), Error Handling (5%), Context Density (5%), Provenance Coverage (5%).
+Agent Readiness Score (0-100). 9 dimensões: Type Coverage, Test Coverage, Architecture Fitness, Docs Coverage, Naming Clarity, Error Handling, Context Density, Provenance Coverage e **Connectivity** (alcançável de ≥1 superfície — capacidade dormente entrega zero). Leia os pesos e a nota do próprio comando: `agf harness --select data.breakdown`.
 
 Grades: A ≥ 85, B ≥ 70, C ≥ 55, D < 55.
 

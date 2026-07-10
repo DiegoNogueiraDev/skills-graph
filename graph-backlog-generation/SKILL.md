@@ -276,8 +276,8 @@ re-investigate the codebase to start, the node isn't done. **Epic nodes** carry 
 
 - **Title** — imperative verb prefix signalling work type: `WIRE:` `IMPLEMENT:`
   `RELEASE:` `FIX:` `DOCS:`. One atomic outcome (≤2h).
-- **Description** — the _why_ + exact EXPAND pointers: real file paths & symbols to
-  touch (e.g. `src/core/swarm/agent-claim-manager.ts`) and explicit "do not recreate".
+- **Description** — the _why_ + exact EXPAND pointers: the real file paths and symbols
+  the executor must touch in **your** repository, and an explicit "do not recreate".
 - **AC** — 2–4 discrete `--ac` Given-When-Then criteria, each independently testable
   with a concrete fixture (`new Database(':memory:')`, stub-LLM token counter). Make
   them **observable**: a number, a boolean, a status code, an exact string. Weak

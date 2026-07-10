@@ -197,7 +197,7 @@ commands: `agf help` · `agf <cmd> --help` · `agf retrieve-command "<intent>"`.
 ### Step 1 — HUNT: collect findings deterministically (~0 token)
 
 ```bash
-agf harness --violations   # 8-dim quality (types·tests·fitness·docs·naming·errors·context·provenance)
+agf harness --violations   # 9-dim quality (types·tests·fitness·docs·naming·errors·context·provenance·connectivity)
 agf gaps --severity required   # traceability, AC coverage, missing edge/error cases
 agf lint   ·   agf quality   # lint + security rules + quality bars
 agf insights --select data.hotspots   # churn/regression hotspots — where bugs cluster
