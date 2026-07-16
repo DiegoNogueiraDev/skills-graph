@@ -341,7 +341,32 @@ So any model honors the rules from the CLI alone — no reliance on memory:
 
 ---
 
-## Close-out Report Format (end of every cycle/epic — rule 14: decide, don't ask)
+## Verification lineage (why every graph-\* pillar verifies the same way)
+
+All three pillars make the same move under different names — PLAN runs a completeness
+critic, BUILD gates on `phantom_done` (AC↔code↔test on disk), HARDEN reproduces a bug
+with a failing test before claiming it. That shared discipline has a name and an
+evidence base worth stating once:
+
+- **CRITIC** (Gou et al., ICLR 2024, arXiv:2305.11738) — self-correction works only when
+  it is _tool-interactive_: verify against an external tool, then amend. Its conclusion is
+  "the crucial importance of external feedback". → **every "done / verified / complete"
+  claim must cite a tool result** (a `grep`, a `node show`, a file on disk, a green test),
+  never an assertion.
+- **Chain-of-Verification, factored** (Dhuliawala et al., ACL 2024, arXiv:2309.11495) —
+  answer each verification question from a **fresh read**, not by re-reading your own draft;
+  a check that re-reads its own reasoning just re-confirms it. → run the query again over the
+  repo/graph; "I said it works above" is not evidence.
+- **Reflexion** (Shinn et al., NeurIPS 2023, arXiv:2303.11366) — an agent improves across
+  attempts only when it records _why_ a miss happened and the next attempt reads it. → durable
+  lessons (the generator blind-spot, not the one-off fix) go into the owning skill; the skill
+  is the persistent reflection buffer.
+- **Caveat (Huang et al., ICLR 2024, arXiv:2310.01798)** — _intrinsic_ self-correction with no
+  external signal (re-reading your plan, "are you sure?") measurably DEGRADES output. Grounding
+  in a tool is not optional polish; it is what separates real critique from self-confirmation.
+
+This is golden rule 8 (deterministic trigger, not an agent remembering) applied to the agent's
+own claims. Each pillar's skill body carries the domain-specific form; this is the shared root.
 
 Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying:
 
