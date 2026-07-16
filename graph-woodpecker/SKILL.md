@@ -89,12 +89,39 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    # gaps phantom_done=ANTI-HALLUCINATION (done tasks whose testFiles não existem no disco)
    # lint=lint+security · insights=regression/churn hotspots
    ```
+   > `exec chain` funciona em dev e no binário (fix `665d0a91`) e agora emite `ok:false`
+   > se um step falhar — ainda assim, confirme o efeito de cada varredura, não só o `ok`.
+   > **Um step que falha com "invalid JSON"/"Unexpected token" NÃO é ruído — é um achado.**
+   > O comando daquele step violou o contrato de stdout do CLI: emitiu texto cru ANTES/junto
+   > do envelope JSON. A causa-raiz clássica é um `spawnSync(..., { stdio: 'inherit' })` de uma
+   > ferramenta externa (eslint, tsc, git) que despeja o output humano no stdout, enquanto o
+   > mesmo comando também chama `out.ok()` — o stdout fica com texto+JSON e nenhum consumidor
+   > (jq, exec chain, `--select`) parseia. Fix: CAPTURE o output do child (`encoding:'utf8'`,
+   > nunca `inherit`) e ESTRUTURE-o em `data`; emita só o envelope. Sinal de detecção grátis:
+   > `agf <cmd> --select data.x | jq .` — se `jq` engasga, o comando está furando o contrato.
+   > (Corrigido assim em `agf lint`; a mesma assinatura vale para qualquer wrapper de tool.)
    > **Triangulation (anti-hallucination).** A task is only really delivered when AC ↔ code ↔
    > **physical test** all align. `phantom_done` crosses `status=done` against the filesystem on
    > BOTH axes — `testFiles` (test) and `implementationFiles` (code): a done task declaring a
    > file that isn't on disk is a hallucination — file it as a finding and remediate (write the
    > missing file, or fix the reference via `agf node update <id> --test-files|--implementation-files
 <real files…>`). This is the hardening leg the graph-only gaps could not see.
+   >
+   > **⛔ BEFORE remediating a `phantom_done`, triage WHY the file is absent — `git log --all --
+<path>` (+ `--diff-filter=D`). Absent ≠ never-built.** Three cases: (a) **never-built** (no
+   > history) → build it or reopen; (b) **stale-reference** (the deliverable exists under another
+   > name) → fix the pointer, don't rebuild; (c) **deliberately deleted** — a commit removed it on
+   > purpose (message like "remove network/telemetry/unsolicited", "local-first", "deprecate",
+   > "privacy") → the task is **OBSOLETE / superseded**: `agf node rm` it (archive), and **NEVER
+   > rebuild — rebuilding is a regression that re-opens the exact hole the deletion closed.** Earned
+   > the hard way: a `phantom_done` for `update-notifier`/`update-notify-cli` was "resolved" by
+   > rebuilding — silently re-introducing the phone-home (leaked IP+version on every `agf` invocation)
+   > that a prior commit had deliberately removed to make the tool local-first. The enforcement guard
+   > (`local-first-no-network.test.ts`) caught it, but **`npm run test:blast` (`vitest --changed`,
+   > module-graph) did NOT** — that guard reads source as a STRING (no import edge), so a per-task
+   > blast never marks it affected. Lesson twofold: **check the reason for absence, not just the
+   > absence**, and know that **content-scan guards are invisible to `--changed` blast** — run them
+   > standalone (smoke/pre-commit) when your change could trip one.
    >
    > **A second, subtler phantom-value class: real code + real test, but the artifact never
    > reaches its actual consumer.** File-existence triangulation only proves code and test
@@ -207,6 +234,25 @@ agf provenance   # untracked/unattributed changes (audit trail gaps)
 Multi-modal sweep — each lens is blind to the others: types (harness), behavior (gaps),
 style/security (lint), history (insights/hotspots). Triangulate; don't trust one.
 
+**Economy-integrity lenses (deterministic signals the economy pillars added — HARDEN must
+consume them, they are not just dashboards).** As the token-economy machinery ships, its own
+gates become audit surfaces; a stale/negative one is a real finding:
+
+- `agf gaps --kind driver_boundary_missing` — a lever is ON but its declared driver surface
+  shows **zero** economy in the ledger: wired-but-not-firing-at-the-driver, cost without return.
+- `agf metrics --economy-report --select data.rd` + `agf eval --gate` — the rate-distortion
+  curve: a lossy compressor whose **distortion regressed >10%** vs baseline is degrading
+  meaning to save tokens. Treat a red RD gate like a failing test.
+- `agf savings --by-surface` all in `unknown` — economy that is real but **not attributable to
+  the driver**: the attribution wiring rotted, the number can't be trusted.
+- `agf metrics --select data.fpy` cross-checked against `agf gaps --kind phantom_done` — a
+  first-pass-yield near 1.0 with phantom_done findings is **inflated assertiveness**: the FPY
+  reads self-reported outcomes; the triangulation is what keeps it honest.
+
+> Command names drift — the SIGNAL is the point: lever-ON-without-driver-effect, lossy-
+> compression-that-degrades-meaning, economy-not-attributable, assertiveness-inflated-by-
+> unbacked-done. Confirm the live command with `agf help` / `agf retrieve-command`.
+
 **A sixth lens — sibling-diff, found while wiring dormant code (leafcutter harvest), not
 from any tool above.** When two modules implement the same concept and only one is wired,
 do NOT assume the wired one is correct by default — diff them. Twice in one session the
@@ -271,6 +317,59 @@ invokes a shell, so args reach the binary as literal argv with nothing to quote 
 escape, on any platform. Live-test the fix with an actual malicious payload
 (`'; touch /tmp/marker; echo '`) before and after, not just a lint pass.
 
+**A security CLASSIFIER over a compound input is bypassable by whatever the classifier
+forgot to decompose.** Earned this sweep: a bash-risk validator classified `rm`/`dd`/`chmod`
+with `^`-anchored rules — so it only ever inspected the FIRST command of a chain, and
+`ls; rm -rf /`, `ls && rm -rf ~`, `echo x | dd …` all came back `safe` (the destructive
+command hidden after a safe prefix). Same shape as an allowlist that matches the invocation
+path instead of the role: the check's premise about the INPUT'S FORM was wrong. Whenever a
+detector runs a per-unit rule (`^cmd`, first-token, basename) over an input that can hold
+MANY units (shell separators `; && || | &`, path segments, comma-lists, header folds),
+decompose into every executable/addressable unit FIRST and classify each — return the most
+severe. The free repro: feed a dangerous unit AFTER a benign one; if the verdict is benign,
+the anchor is the bug. Split conservatively — over-splitting only adds checks, it can never
+let a unit hide from the classifier. **The filesystem twin of this bug: prefix matching on
+PATHS.** `absPath.startsWith('/tmp')` matches `/tmpevil` (sibling sharing the prefix), and a
+raw absolute path that never had `..` collapsed (`/tmp/../etc/passwd`) matches a `/tmp`
+sandbox while actually pointing at `/etc/passwd` — a sandbox escape to sensitive files
+outside the sandbox root (e.g. `/root/...`) from a Tmpdir policy. Two fixes, both required: NORMALIZE the path first (resolve `..`/`.`,
+even when it's already absolute — code often skips normalization for absolute paths), then
+match with a `/` BOUNDARY (`p === base || p.startsWith(base + '/')`), never a bare prefix.
+Free repro for the path case: `<allowed-root>/../etc/passwd` and `<allowed-root>evil/x` —
+if either resolves to a grant, the boundary/normalization is missing. **The network twin:
+domain/host allow-lists.** Matching a `*.example.com` rule with `url.includes('.example.com')`
+lets `example.com.evil.com` (suffix confusion) and a marker planted in the path/query/fragment
+(`evil.com/#.example.com`) pass — an SSRF-class egress bypass. PARSE the host
+(`new URL(url).hostname`) and match on a label boundary (`host === domain ||
+host.endsWith('.' + domain)`), never a substring of the raw URL. Free repro:
+`https://<allowed-domain>.evil.com`, `https://evil.com/#<allowed-domain>`,
+`https://evil.com/?x=<allowed-domain>` — any allow is a bypass. The through-line across shell,
+path, and URL: **re-parse the input into its real unit (command segment / normalized path /
+hostname) and match THAT with an explicit boundary — never string-search the raw input.**
+
+**Fence/delimiter breakout — the isolation twin of the boundary class.** When untrusted
+content is isolated by wrapping it between FIXED, known delimiters (a prompt fence like
+`===PAGE_CONTENT_END===`, a CSV/multipart separator, a template marker), the content can
+FORGE that delimiter and escape the fence — closing it early so smuggled text lands in the
+trusted region (a real prompt-injection / data-injection vector). The wrapper must NEUTRALIZE
+(defang/escape) every copy of the delimiter inside the payload before wrapping, so the output
+holds exactly one real delimiter pair. Free repro: wrap a payload that contains the delimiter
+verbatim; if the output has more than one copy of the delimiter, it breaks out. (Watch the
+matching unwrap/parse too — brittle index-math around delimiters often fails even on benign
+multi-line content.)
+
+**The EXTRACTION step is its own attack surface — a gate only protects what it extracts.**
+The matching classes above assume the dangerous unit already reached the validator. But a gate
+that first EXTRACTS units from a compound input (paths from a command, URLs from text, args from
+a line) via a narrow filter misses any unit that's disguised: a path in quotes (`rm -rf
+"/etc/passwd"`), attached to a flag (`--out=/etc/x`), or a relative traversal without a leading
+dot (`sub/../../etc/passwd`) all slid past a `startsWith('/'|'./'|'../')` extractor and were
+never checked — a clean bypass to a denied location even though the matcher was correct.
+Unwrap/normalize each token (strip quotes and `--flag=`, treat any `..` traversal as a path)
+BEFORE the extraction filter. Free repro: feed the dangerous unit disguised (quoted, flag-
+attached, traversal-without-prefix); if the gate allows it, the extractor is the hole, not the
+matcher.
+
 **A gate/heuristic you just added is itself a hardening target.** A newly-wired
 detector (regex, path pattern, threshold) can be too broad and generate friction that
 erodes trust in the DoD process — e.g. a "flag core modules needing corpus-scale
@@ -280,6 +379,42 @@ When a gate fires repeatedly on work that is clearly fine, don't just `--force` 
 it every time — check whether the gate's own pattern is measurably too broad (count
 false positives this session), and narrow it with a regression test proving the
 narrowed pattern still catches the real case.
+
+**The root-cause class (earned twice in one sweep): a detector that matches by LOCATION
+(path/directory) instead of by ROLE (basename/content) false-positives in bulk.** A
+"needs corpus-scale tests" gate keyed on `\b(parser|interpreter|…)\b` over the whole
+PATH flagged every file merely living under a `parser/` directory (readers, classifiers
+— not grammar parsers), and a "barrel must re-export siblings" check treated every
+`index.ts` as a barrel, including bin ENTRYPOINTS (an `index.ts` opening with a shebang,
+whose re-exports would run bootstrap as an import side effect). Both fixes were the same
+move: match the ROLE, not the folder — test the basename / the file's own nature, and
+exempt the structural exception (the shebang entrypoint). **A gate that induces `--force`
+is the highest-priority hardening target of all**, because `--force` also skips the
+tests — so a false-positive there doesn't just annoy, it silently punches a hole in the
+quality gate every time it fires. **Measure before you narrow**: a deterministic
+`git ls-files | grep` gives the real false-positive rate (e.g. 20/27 = 74% were
+directory-only matches) — narrow on the datum, never on a hunch, and keep BOTH regression
+assertions (the innocuous case stops firing AND the genuine case still bites).
+
+**A silent infinite loop hides as a fast, "successful", zero-work result — root cause: a
+state-machine TRANSITION gated on the WRONG SIGNAL.** A pipeline that ran maxSteps in ~2ms
+with 0 output and reported a bland "resolve=0" (no error) turned out to loop one phase
+forever: the "phase N is done, advance" condition checked for a node TYPE the phase's
+producer never emits. A delivery machine re-ran `import` every step because "import done"
+was keyed on `hasRequirements` (requirement-type nodes), but the importer for a task-only
+PRD emits `task`/`acceptance_criteria` and NEVER a `requirement` — so the flag stayed false
+and it never reached `implement` (0 model calls; this is exactly why a downstream ledger
+read `$0`). The fix and the general rule: **a "phase-complete" / transition condition must
+match what the phase's producer ACTUALLY emits (here: "any nodes exist" / `emptyGraph:false`),
+not a specific artifact type it may never produce.** Second, subtler half: the loop HAD a
+stall-guard (dedupe on `action|JSON.stringify(state)`), yet it never fired — because an
+IRRELEVANT field in the state (a growing `totalNodes` as each re-import re-inserted) drifted
+every iteration, so the guard key was never equal twice. **A stall/cycle guard keyed on the
+FULL state snapshot is defeated by any drifting irrelevant field; key it on the
+progress-relevant subset.** Free repro for the loop class: run the flow with a small step
+cap and CAPTURE the per-step action log (a suppressed `onLog` is why this stayed invisible)
+— a repeated action with an unchanging reason is the loop; the fast wall-clock + zero output
+is the tell.
 
 ### Step 6 — CLOSE + LEARN
 
@@ -297,6 +432,15 @@ the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim graph-backed: `N tes
 shows `test:node`/coverage) + Achado transversal + Honestidade + the decided next step
 (`Próximo: X — porque [fundamento]`, e.g. risco-primeiro = severity × blast radius). Obey
 that section verbatim — single source, do not re-improvise the format here.
+
+**Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you hand
+back, ask "what durable hardening lesson from this sweep must the NEXT woodpecker read
+_here_?" A reproducible root-cause class, a new deterministic audit signal, a false-green
+pattern → **edit THIS skill** (command-agnostic: the signal/why, never a hardcoded command
+catalog), propagating to every synced destination (project `.agents/skills` ↔ global
+`~/.claude/skills`) and scanning secrets before any public push. The sibling-diff lens and
+the economy-integrity lenses above both entered this skill exactly this way. Transient facts
+(counts, versions) go to memory/pheromone, never the skill.
 
 ## Anti-Patterns
 

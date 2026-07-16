@@ -65,7 +65,12 @@ the builder.
 
 The one thing you DO add to the graph is an **honesty node** — a `risk` / `bug` /
 `task` stub for a loose end you hit mid-build, so nothing is faked done. That is
-reporting for the planner to refine later, never a full PRD.
+reporting for the planner to refine later, never a full PRD. **If that stub is a
+`task` you (or the next ant) will actually pull and close, give it real testable
+`--ac` at CREATION** — a spec written only into the description passes node-add but
+fails the later `done` DoD on the AC-quality/testable-AC checks, forcing a mid-close
+detour to backfill AC. (A `risk`/spec node is the opposite — it has no AC and closes
+via the raw forward transition; see Step 4.)
 
 The builder **owns git** (the planner never touches it): branch-per-implementation →
 TDD → merge to `main` → commit/push → delete the branch. The graph says _what_; you
@@ -90,11 +95,19 @@ Workflow below is the same loop for stronger models; this is the compiled versio
 2. **Pick when many are ready (no math):** lowest-id `must`; no `must` → lowest-id
    `should`; tie → lowest id. Ignore the fitness formula unless you can compute it.
 3. `agf preflight "<task title>"` → verdict `wip-conflict`, or a match on **another**
-   id → **STOP** and report. (`duplicate-risk` on the picked id itself = expected → go on.)
+   id → **divert, don't stop**: leave that task to its ant, assume your agent id and
+   claim a different one (`agf next --agent <you>` — see Concurrent Multi-Agent
+   Protocol). STOP only if nothing else is claimable or the conflict is on the task
+   you already claimed. (`duplicate-risk` on the picked id itself = expected → go on.)
 4. `agf context <id>` → read it. `agf search "<feature>"` (always present) + `rg "<key symbol>" src` (or `grep -rn "<key symbol>" src` where ripgrep is absent).
    **DEFAULT: the file already exists → edit it (EXPAND).** Only `agf scaffold` if search
    returns nothing.
-5. `agf node status <id> in_progress`.
+5. `agf node status <id> in_progress` **and declare your file scope NOW** —
+   `agf node update <id> --implementation-files … --test-files …` (as soon as you know
+   what you'll touch, not at done-time). In a shared graph the declared files ARE your
+   territory: they exclude colliding candidates from other ants' pulls and stop their
+   done-gate from flagging your dirty files as scope creep — an undeclared file is an
+   orphan that blocks the whole colony.
 6. Write the **failing test first** from the AC → run it → see it fail → minimal code to
    pass. No test written = **STOP** (TDD is mandatory).
 7. `npm run test:blast` → red? fix; **max 3 tries**, still red → `agf node add --type bug …`
@@ -186,7 +199,7 @@ agf search "<feature>" ; rg "<module|feature|symbol>" src   # find what exists (
 agf node status <id> in_progress  # claim it only AFTER you know what you'll touch
 ```
 
-> Prefira `agf exec chain "a; b; c"` a rodar `a`, `b`, `c` em linhas separadas: 1 ciclo de store, 1 envelope, menos tokens. Use `agf exec pipe` quando o passo seguinte precisa do `.data` do anterior.
+> Prefira `agf exec chain "a; b; c"` a rodar `a`, `b`, `c` em linhas separadas: 1 ciclo de store, 1 envelope, menos tokens. Use `agf exec pipe` quando o passo seguinte precisa do `.data` do anterior. Funciona em `npm run dev` e contra o binário instalado (fix `665d0a91`: re-invoca via `execPath`+`execArgv`). O envelope externo do chain agora é `ok:false` se qualquer step falhar — mas a regra-mãe permanece: um `ok:true` cujo efeito você não verificou não é sucesso, confirme no grafo/disco.
 
 - **Most tasks are EXPAND-not-create.** In real loops the core module / table /
   lever usually already exists — find it and extend the owning module. Greenfield
@@ -269,6 +282,13 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
 
 **Gate reality (earned in real loops — read before fighting a red `done`):**
 
+- **The blast gate is BLIND to convention/isolation tests that read files via fs.** `test:blast`
+  follows the Vite import graph — a test that asserts over source files with `readFileSync`/`readdirSync`
+  (layer-isolation "src/X must not import ../cli", file-size sweeps, convention scanners) is never
+  "affected" by your edit and never runs. A green blast can therefore hide a layering regression your
+  new file just introduced. Whenever you CREATE a file in a layer-guarded dir (e.g. `src/swarming`),
+  explicitly run that layer's convention test alongside blast — earned when a fresh adapter imported
+  `../cli` and blast stayed green while the isolation test was red on the full suite.
 - **Anti-hallucination gate (`PHANTOM_TESTFILE`).** `agf done` now refuses a task whose declared
   `testFiles` **or** `implementationFiles` do **not** exist on disk — a delivery no real code/test
   backs. This is the AC ↔ code ↔ **physical test** triangulation (both axes) enforced on entry, and
@@ -278,6 +298,13 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
 - `agf done` runs the **full** suite by default. A _pre-existing, unrelated_
   failure will block it. Confirm it is not yours: `git stash -u` → rerun the
   failing test → `git stash pop`. If it fails on clean `main`, it is pre-existing.
+  **In a SHARED tree (colony), never stash — it sweeps the other ant's dirty files
+  (rule 4).** Colony-safe proof: `git worktree add <tmp> origin/main` + symlink
+  `node_modules` → run the failing test there → `git worktree remove --force`.
+  A throwaway _verification_ worktree is fine (the rejection of worktree-per-ant
+  is about _working_ there); it proves pre-existence without touching the tree.
+  Then file the bug node and, for a push blocked only by that proven-foreign
+  failure, bypass the hook citing the proof — never bypass on an unproven red.
 - `agf done --test-cmd "npm run test:blast"` can fail with a **DB lock / code 1
   when the changed set is wide** (done holds `graph.db` open while spawning the
   gate) even though blast passes standalone. Workaround: run blast standalone for
@@ -289,6 +316,11 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
   the honest signal is your real gates (blast + `check` + `harness` green + the test
   proving the behavior). Close it with the raw forward transition (`agf node status
 <id> done`), not `agf done`. Never invent AC just to satisfy the task gate.
+  The same applies to a **measurement/VALIDATE task whose deliverable is
+  ledger/db evidence, not source** (an A/B run, a benchmark): `agf done` will
+  refuse with NO_FILES_MODIFIED because nothing tracked changed — the honest
+  close is the raw transition backed by the recorded numbers (decision node +
+  green receipt tests), never a fake source edit to appease the gate.
 
 - Pre-existing failure, a bug you discovered, or a deferred integration →
   `agf node add --type risk|task …` **before** `done`. Then complete your task on
@@ -296,6 +328,53 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
 
 Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
 `agf snapshot`), and LISTENING (DORA retro) into the close-out.
+
+**Close-out mechanics (the boring failures that eat a real loop — earned repeatedly):**
+
+- **`done` → commit, never the reverse.** `done` reads the working tree; commit first
+  leaves it clean and `done` refuses with `NO_FILES_MODIFIED`. Sequence per task:
+  edit → `agf done <id>` → commit → next. If you already committed, close via the raw
+  forward transition with your gates green, don't fight it.
+- **`BLAST_RADIUS_EXCEEDED` from files you did NOT write in this task.** Two silent
+  sources fill the tree behind your back: (1) a **format-on-save / lint hook reformats a
+  file _after_ your commit** (a long line wrapped, an import re-sorted); (2) the **`done`
+  hooks regenerate marker-wrapped context files** (CLAUDE.md · AGENTS.md · `.cursor` ·
+  `.github/copilot-instructions.md` · generated command-surface). Neither is yours to
+  claim. Fix: `git stash push -- <foreign paths>` before the next `done`, pop after; sweep
+  them periodically in a separate `chore(docs)`/`style` commit. Do NOT `--force` past the
+  gate — that skips the tests too.
+- **In a shared tree (multiple ants), other ants' untracked files appear beside yours.**
+  Commit with **explicit `git add <your files>`, never `git add -A`/`.`** — an untracked
+  `genesis.ts` from another ant is not your delivery.
+- **Know the repo's commit rules before you write the message, not from the reject.**
+  This repo enforces commitlint: subject lower-case (no Sentence-case), header ≤100 chars,
+  body ≤100/line, `scope` from a fixed enum (`cli·core·graph·hooks·events·plugins·`
+  `approval·tests·ci·docs`). Check the config once; a rejected commit costs a round-trip.
+- **A measured NEGATIVE result is a valid delivery — register it, never fake green.**
+  When an A/B or benchmark you built comes back _against_ the feature (it cost more, it
+  raised the defect rate), the honest close is a `decision` node + a `risk` node with the
+  numbers, and leaving the lever OFF — not rewriting the fixture or the threshold to make
+  it pass. The lever's default-OFF is the safety; the proof is the point, in either direction.
+- **A green RED is a lying fixture, not a passing test.** If your failing test never went
+  red for the right reason, the fixture is wrong. Three real traps: bag-of-words cosine can't
+  separate tokens that differ only by a number (`"módulo 3"` ≈ `"módulo 4"` → fixtures
+  differing only by an index collide and the test asserts economy that isn't there); a
+  text filter that only fires on one language (caveman: English hedges/fillers) shows no
+  delta on a Portuguese fixture; and a **fixture that seeds a shared key/namespace in a
+  different format than the real producer writes** (producer acquires `task:<id>`, the
+  consumer's test seeds bare `<id>` → unit green, real flow a silent no-op). When two
+  modules share a key format, either export ONE constant both use or write one
+  integration test that runs producer→consumer for real. Make the fixture exercise the
+  exact thing that differs.
+
+**Skill hardening (MANDATORY close-out — see `_shared.md` → Golden Rule 17):** before you
+hand back, ask "what durable lesson from this cycle must the NEXT builder read _here_?" A
+reproducible gotcha, a root-cause, a gate-reality, an architecture decision → **edit THIS
+skill** (command-agnostic: the why/how, never "run command X"), propagating to every synced
+destination (project `.agents/skills` ↔ global `~/.claude/skills` ↔ any distributed copy)
+and scanning for secrets before any public push. A transient fact (a count, a version, a
+current status) goes to memory/pheromone, not the skill. The skill is what the next ant
+reads to ACT — a lesson left only in memory does not harden the process.
 
 ### Step 5 — Learn & reinforce (stigmergy)
 
@@ -399,52 +478,142 @@ real bill under any model.
 See `_shared.md` → **Token Economy** for the full arsenal: gateway auto-levers
 (diff-edits, repo-map, lossy-gate, CCR), `agf economy list`, and the compress guardrail.
 
-## Concurrent Multi-Agent Protocol (2+ agents, one graph)
+## Concurrent Multi-Agent Protocol (N ants, one graph — stigmergy)
 
-Two or more agents can safely share one SQLite graph using the claim/lease system.
-Each agent sets a unique identity; the WIP guard becomes per-agent, not global.
+Two or more agents ("ants") can share one SQLite graph using the claim/lease system.
+Each ant sets a unique identity; the WIP guard becomes per-agent, not global. The
+governing rule is stigmergic: the environment (statuses, leases, working tree) tells
+you what to do — **an occupied trail means divert to another task; never freeze the
+colony, never fight over the same node.**
 
-### Setup
+### Setup — identity is mandatory in a shared graph
 
 ```bash
-# Agent A (terminal 1)
-export AGF_AGENT_ID=agent-a
+# Ant A (terminal 1)
+export AGF_AGENT_ID=formiga-a
 
-# Agent B (terminal 2)
-export AGF_AGENT_ID=agent-b
+# Ant B (terminal 2)
+export AGF_AGENT_ID=formiga-b
 ```
 
-Alternatively, pass `--agent <id>` to every `agf next` call.
-Priority: `--agent` flag > `AGF_AGENT_ID` env var > auto-generated UUID.
+Alternatively, pass `--agent <id>` to `agf next` AND `agf done` (next claims, done
+releases — both sides need the id). Priority: `--agent` flag > `AGF_AGENT_ID` env
+var > auto-generated UUID. An ant operating WITHOUT identity gets single-agent
+semantics — see the hijack gotcha below.
+
+> **GOTCHA — `--agent` belongs ONLY on `next` and `done`; `agf node status` does
+> NOT accept it and silently no-ops the transition when you pass it.** Running
+> `agf node status <id> in_progress --agent <you>` returns a header but the status
+> stays `backlog` (the unknown flag is swallowed, the mutation dropped) — you don't
+> discover it until `agf done`/`check` fails the required `status_flow_valid` DoD
+> check ("deve passar por in_progress"). Transition WITHOUT the flag:
+> `agf node status <id> in_progress`. Ownership (`metadata.claimedBy`) is already
+> written by `agf next --agent <you>`, so the plain transition is colony-safe — the
+> id doesn't need to ride on `node status`. Prefer the env var (`export
+AGF_AGENT_ID=<you>`) so identity flows to every command that honors it and you
+> never hand `--agent` to one that doesn't.
 
 ### Claim lifecycle
 
 ```
-agf next --agent agent-a       # atomically claims a task; others skip it
+agf next --agent formiga-a       # atomically claims a task; other ants skip it
   → claim: { agentId, leaseToken, expiresAt }
 
-# … Agent A implements + TDD …
+# … Ant A implements + TDD …
 
-agf done <id> --agent agent-a  # marks done + releases the lease
+agf done <id> --agent formiga-a  # marks done + releases the lease
 ```
 
-If Agent A crashes mid-task, the lease TTL (default 30 min) auto-expires and
-the task becomes reclaimable. Use `agf claims` to inspect live leases.
+If an ant crashes mid-task, the lease TTL (default **5 min** — verified
+`CLAIM_TTL_SECONDS = 300` in agent-claim-manager; the docs' old "30 min" was wrong)
+auto-expires and the task becomes claimable again. Re-running `agf next --agent
+<you>` re-claims/renews your own live task after a restart. Inspect live leases
+with `agf claims`.
 
-### 2-agent runnable example
+### Stigmergy rules (earned in real 2-ant sessions)
+
+1. **The durable trail marker is `in_progress` status, not the lease.** The lease
+   only guarantees pull-time atomicity; any real TDD task outlives 5 min. After it
+   expires, the other ant's only protection is the `in_progress` status — treat it
+   as pheromone: NEVER adopt a task in_progress that isn't yours, even when
+   `agf claims` is empty. Live-ant signals: blast-file mtimes seconds old, a second
+   agent process running, files appearing mid-investigation.
+2. **Ownership lives on the node (`metadata.claimedBy`), written at claim.** A task
+   in_progress owned by another ant is never handed out as `wip-idempotent` and is
+   surfaced as `FOREIGN_WIP` in the pull envelope; only a LEGACY in_progress node
+   with no owner still gets the old restart-recovery handoff — so identity remains
+   mandatory: an id-less ant writes no ownership and gets no protection.
+3. **Occupied trail ⇒ divert, don't stop.** Meeting the other ant mid-flight
+   (wip-conflict, foreign in_progress, files changing under you) is not an error:
+   leave that task alone, claim another with your id, keep the colony moving.
+   Reserve STOP for: nothing claimable AND harvest dry, or an unsafe tree (rule 4).
+4. **The shared working tree is coordinated by DECLARED FILE SCOPES — declare at
+   claim, always.** (Same-tree is the light mode for 2-3 ants; at 4+, use
+   worktree-per-ant — see **Scaling: worktree-per-ant** below. The old rejection
+   of worktrees — "the gitignored graph.db doesn't travel" — was solved by the
+   central graph root: every ant points at the SAME graph.) The declared boundary
+   (implementationFiles + testFiles) does double duty: other ants' pulls skip
+   candidates whose declared files overlap yours (even after your lease expires —
+   the in_progress+owner status protects), and their done-gate excuses your declared
+   dirty files instead of flagging them as scope creep. An UNDECLARED dirty file is
+   an orphan: it still blocks every other ant's done by design. Never escape with
+   `--force` (it skips tests); close (done + commit with explicit paths) promptly;
+   never `git checkout --`/revert dirty files you didn't author — at most report
+   them. If another ant's stash/pop sweeps the tree mid-run, a false RED or a
+   false NO_FILES_MODIFIED can appear — before diagnosing a revert, check the
+   file's mtime and grep for your symbol: stash-pop returns everything.
+   **Integrating a moved remote with foreign dirty files:** `git pull --rebase`
+   (and `--autostash`) refuses or stash-sweeps the other ant's files — use
+   `git fetch` + `git merge origin/main` instead: merge tolerates dirty files
+   that don't overlap the incoming diff (check with `git diff --name-only
+HEAD origin/main` first), so the colony's tree is never swept.
+5. **Support is free.** Your blast gate re-runs the other ant's affected tests: a
+   green blast re-validates their trail at zero cost; a red one on THEIR files is a
+   finding to deposit as a `risk` node — not a license to touch their code.
+6. **Deposit trails for the colony.** Close each task with a pheromone memory
+   naming the ant-protocol gotchas you hit, so the next ant skips the diagnosis
+   you already paid for.
+
+### Scaling: worktree-per-ant (4+ formigas)
+
+Same-tree interference (done-gate reading the whole tree, one git index, blast
+seeing foreign dirt, lint-staged auto-staging across ants) saturates useful
+parallelism at ~3-5 ants. Past that, give each ant its own git worktree while
+ALL ants share ONE central graph + memories:
+
+```bash
+agf ant spawn formiga-a     # cria <repo>-ants/formiga-a (branch ant/formiga-a),
+                            # symlinka node_modules e devolve os exports prontos
+cd <repo>-ants/formiga-a
+export AGF_AGENT_ID=formiga-a AGF_GRAPH_ROOT=<repo raiz>   # (do envelope do spawn)
+# … loop normal: next → TDD → done → commit na branch ant/formiga-a …
+# fim de ciclo: merge p/ main → push → agf ant rm formiga-a (branch preservada)
+```
+
+Rules that change in this mode: the done-gate and blast see only YOUR worktree
+(no foreign-dirt contortions); commits land on `ant/<id>` and merge to `main`
+at cycle end (golden rule: no orphan branches — merge and delete same-session);
+claims/leases/pheromones work unchanged because `AGF_GRAPH_ROOT` points every
+ant at the same `workflow-graph/`. What does NOT travel into a worktree is
+anything gitignored (node_modules — symlinked by spawn; local `.env`s — copy
+manually if the task needs them). Env hygiene: git exports `GIT_DIR`/`GIT_INDEX_FILE`
+inside hooks — any tool spawning `git` for ANOTHER repo/fixture must strip
+inherited `GIT_*` env or it will silently operate on the parent repo.
+
+### 2-ant runnable example
 
 ```bash
 # Terminal 1
-export AGF_AGENT_ID=agent-a
-agf next --agent agent-a       # pulls task X, claims it
+export AGF_AGENT_ID=formiga-a
+agf next --agent formiga-a       # pulls task X, claims it
 
 # Terminal 2 (concurrently)
-export AGF_AGENT_ID=agent-b
-agf next --agent agent-b       # pulls task Y (X is locked), claims it
+export AGF_AGENT_ID=formiga-b
+agf next --agent formiga-b       # pulls task Y (X is locked), claims it
 
 # Both complete independently:
-agf done <X-id> --agent agent-a
-agf done <Y-id> --agent agent-b
+agf done <X-id> --agent formiga-a
+agf done <Y-id> --agent formiga-b
 ```
 
 ### Override: --force
@@ -452,6 +621,70 @@ agf done <Y-id> --agent agent-b
 `agf next --force` bypasses the per-agent WIP=1 guard and pulls a second task
 for the same agent, emitting a `WIP_OVERRIDE` warning. Use only in exceptional
 circumstances (e.g. the prior task is blocked and cannot be done yet).
+
+### The colony as a separate, installable orchestrator (delegate-first, opt-in)
+
+The colony can be driven by a **second, separately-installable binary** that lives
+in the SAME repo and reuses 100% of the core — never a rewrite. The point is
+optionality: a heavy frontier model plans the backlog; a **cheap model executes** it,
+task by task, routing each task's **complexity-caste → model-tier** (the smallest
+caste runs on the cheapest tier). Two invariants make this safe to wire back into the
+main loop:
+
+- **Opt-in that is byte-identical when absent.** The delegation is behind a flag that
+  **only short-circuits when the capability is detected** (a handshake with the
+  installed binary); with the binary absent — or the flag off — the current
+  delegated/live path is untouched. A flag that changes the default when its target
+  isn't present is not opt-in, it's a regression. Prove the deep-equal: absent-binary
+  output must match the no-flag output.
+- **Capability without a surface is dormant (rule 9), so the delegation IS the
+  surface.** Building the orchestrator and never wiring a way to reach it delivers
+  zero; the wire (a flag on the existing loop) is what turns it on.
+
+**Proving the colony's value is the ATTRIBUTION, not the dollar cost.** Each task the
+colony closes records its tokens against that task's node in the ledger; the value
+proof (rule 16) is `tokens > 0 attributed per node` read back through the normal
+metrics surface — a real number, not a claim. In delegate-first mode a **zero dollar
+cost is CORRECT, not a bug** (the ledger prices real provider calls; there are none).
+Never fake a cost to "show value" — show the attribution.
+
+**Colony runtime (live + delegated):** the async colony path has shipped (B4, B5).
+`runColony()` executes tasks through the async provider adapter when a provider is
+connected (via `--swarm` or the colony binary's `run` command). When no provider is
+available, the colony returns the **delegated envelope** — proving zero-dollar cost
+is correct (the ledger records real calls; with none, attribution is empty).
+The sync execution port still exists for tests/stubs; the async path is the default
+for live runs.
+
+**Instrumenting the colony (the operator-facing "how to turn it on").** The section above
+is the _why_; this is the durable _how_, command-agnostic (the exact verbs always come
+from `agf help` / `agf retrieve-command`, never hardcoded here):
+
+- **It is a second binary in the SAME repo, not a separate package.** Building the repo
+  produces the colony bin alongside the main one; it becomes reachable to the opt-in flag
+  only once it is on the PATH (installed/linked) — that is precisely what the flag's
+  handshake probes before delegating. In-repo, drive it through the dev entrypoint
+  (dogfood), never a stale globally-installed bin.
+- **Providers are a single shared source with the main CLI — never wire them twice.** The
+  colony has NO provider config of its own; it reads the SAME project settings the main
+  `provider use` writes. So connecting a provider once (its env-var key present + selecting
+  it, e.g. OpenRouter) serves the main loop AND every ant: when that key is detected the
+  router prefers it and maps each complexity-caste → model-tier automatically. Duplicating
+  provider wiring for the colony would violate single-source (rule 5).
+- **Fallback is TWO-level, both delegate-first, both `$0`-ledger-correct:** (1) opt-in flag
+  set but the colony binary ABSENT → the main loop's existing delegated/live path runs
+  untouched (the byte-identical invariant above); (2) binary present but NO provider
+  connected → the colony returns the **delegated envelope** ("drive it with your own LLM"),
+  never a command pretending to run autonomously. Instrumentation is therefore purely
+  additive: turning the flag on can never regress the no-colony behavior, and a missing
+  provider degrades to delegation, not failure.
+- **Colony size is a parameter on the opt-in flag** — one ant = one worktree (the
+  worktree-per-ant primitive above), all pointed at the same graph via the shared
+  graph-root env. Sizing past ~3-5 is where worktree-per-ant (vs. same-tree) pays off.
+- **Nothing to pull is not a colony failure.** A perfectly-instrumented swarm still needs
+  `task`-type nodes in the backlog; a backlog that is all spec-artifacts (risk/epic/
+  requirement/…) leaves every ant idle. Verify pullable work exists (the picker returns a
+  task) BEFORE blaming the swarm wiring — instrumentation and fuel are separate concerns.
 
 ## Related
 

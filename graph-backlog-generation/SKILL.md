@@ -113,9 +113,14 @@ The project's golden rules, distilled for ANALYZE/DESIGN/PLAN. Non-negotiable:
 1. **Investigate first, never duplicate.** `agf preflight "<theme>"` + scan existing
    epics + a repomix code-map BEFORE planning. A `wip-conflict` / `duplicate-risk`
    verdict = STOP; another agent or a shipped epic already owns it.
-2. **Expand, never recreate (DRY).** search/query/grep/repomix for the owning module
-   and plan to _extend_ it. Net-new only when it provably does not exist — the
-   strongest epics wire dormant/partial code that already lives in the repo.
+2. **Expand, never recreate (DRY) — and point at the WIRED module, not a legacy
+   twin.** search/query/grep/repomix for the owning module and plan to _extend_ it.
+   Net-new only when it provably does not exist — the strongest epics wire dormant/
+   partial code that already lives in the repo. **Trap: two files can share the same
+   stem** (a legacy `core/llm/tier-router.ts` beside the live `model-hub/tier-router.ts`);
+   a task whose EXPAND-pointer names the dead twin makes the builder edit the wrong
+   file. Before you write a file path into a task, `grep -rn` its consumers and name
+   the one that is actually _imported by the live path_ — code wins the plan.
 3. **Graph is the source of truth.** No task without a node; code/graph beat
    memory/plan (counts in memories go stale — reconcile with `agf stats`/`query`).
 4. **Dogfood.** Drive the whole cycle with `agf` itself; in-repo use `npm run dev --
@@ -349,6 +354,18 @@ becomes a NEW required gap — _"requirement with no implementing task"_ — unt
 a task → it via `implements`. Always close that loop on the support nodes you create,
 then re-run gaps filtered to your ids to confirm **0 required in your subtree**.
 
+**Two required-gap traps on fresh backlog (earned empirically — budget them at `node add`
+time, or fix later via `node update --ac` which replaces `ac[]` in place):** (1) `missing_edge_case` reads the task's OWN `ac[]` and
+wants an explicit error/failure/limit case — a happy-path-only AC set trips it even when the
+_description_ mentions edge cases, and adding a child `acceptance_criteria` node does **NOT**
+close it (only the task's inline `--ac` counts). Budget one error/limit GWT `--ac` per task
+up front. (2) An epic with children but an empty own `ac[]` trips `blocking_container`; close
+it by adding `acceptance_criteria` **child** nodes carrying the epic's Key Result (the epic's
+own `ac[]` legitimately stays empty). And treat `status_flow_valid` + `no_unresolved_blockers`
+"failures" on fresh backlog as EXPECTED, never a defect: deps aren't built yet and nothing has
+passed through `in_progress` — the planner bar remains AC-present + AC-score >= 60 + subtree
+required-clean.
+
 **What "validated" means for fresh planner backlog.** `agf check` on a backlog task
 will report `status_flow_valid: failed` — that is **expected and correct**, not a
 planning defect: the task hasn't been taken through `in_progress → done` yet (that's
@@ -384,6 +401,15 @@ walking-skeleton — porque ordem-de-dependência: todo o resto depende dele"; W
 also apply here). Alternatives as a one-line note, never an open question — except a
 genuinely owner-only call (scope / cost / risk), where you ask with your recommendation first.
 
+**Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you stop
+for the human, ask "what durable planning lesson from this cycle must the NEXT planner read
+_here_?" A recurring mis-scope, a wrong EXPAND-pointer pattern, a KR framing that misled the
+builder → **edit THIS skill** (command-agnostic), propagating to every synced destination
+(project `.agents/skills` ↔ global `~/.claude/skills`) and scanning secrets before any public
+push. Frame KRs as **prove OR disprove**: an A/B that comes back against the feature is a
+successful cycle, not a failure — the default-OFF lever is the safety. Transient facts (counts,
+versions) go to memory, never the skill.
+
 ## Anti-Patterns
 
 - Do NOT write code, tests, or stubs, and do NOT touch git (no commit, no new/switched
@@ -393,8 +419,9 @@ genuinely owner-only call (scope / cost / risk), where you ask with your recomme
   must be required-clean
 - Do NOT add a `requirement`/NFR/`contract` node without wiring a task that `implements`
   it — that creates a phantom required gap
-- Do NOT try to edit AC with `node update` (no `--ac`) — get AC right at `node add`, or
-  rm + re-add; enrich via `--description` otherwise
+- Do NOT `node rm` + re-add just to fix AC — `node update --ac "<c1>" "<c2>" …` REPLACES
+  the whole `ac[]` in place (repeatable; pass every criterion you want to keep) and
+  preserves all edges; enrich prose via `--description`
 - Do NOT implement, test, or review here — that is `graph-builder-leafcutter`
 - Do NOT emit one run-on AC — use multiple discrete, testable Given-When-Then criteria
 - Do NOT skip the investigate step — the backlog must be grounded in real findings
@@ -425,11 +452,12 @@ genuinely owner-only call (scope / cost / risk), where you ask with your recomme
   `--from/--to` (passing them silently no-ops). Relations you'll use: `depends_on`,
   `parent_of`, `implements` (task→requirement/contract), `consumes` (consumer→contract),
   `related_to` (risk/perf→task). Confirm the live set with `agf edge add --help`.
-- **AC is write-once.** `node update` has **no** `--ac` flag and there is no AC-append;
-  AC lives in the node's `ac[]` field. Get it right at `node add` time. To revise AC you
-  must `node rm` + re-`add` (and re-wire every edge) — costly — so prefer pouring extra
-  detail into the **description** (`node update --description` _can_ edit that) rather
-  than recreating the node.
+- **AC is revisable in place (NOT write-once).** `node update --ac "<c1>" "<c2>" …` is
+  repeatable and **REPLACES** the node's whole `ac[]` — it does **not** append, so to
+  revise AC pass the COMPLETE set (the criteria you keep + the new ones). Edges are
+  preserved — **never `node rm` + re-add just to fix AC** (that needlessly re-wires every
+  edge; earned the hard way — a 5-task epic was rebuilt before this flag was noticed).
+  `node update --description` edits the prose independently.
 - **Status is forward-only — planner never sets `in_progress`.** Leave tasks in
   `backlog` (or `ready` once DoR passes). `in_progress`/`done` are the builder pulling.
   If a node slipped to `in_progress`, valid transitions are `done|blocked|ready|`
