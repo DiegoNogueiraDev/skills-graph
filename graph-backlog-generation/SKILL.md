@@ -96,7 +96,22 @@ never code/git.** Top to bottom, obey every **STOP**/**DEFAULT**.
    `ready: true`.
 9. `agf check <each task id>` → AC score <60 → rewrite the AC concretely (add the missing
    number/fixture), retry.
-10. **STOP for the human:** "backlog ready, N tasks — run `graph-builder-leafcutter`."
+10. **Completeness critic — NOT optional. Run a COMMAND for each, never just think.** A
+    finding with no tool output behind it is invented — discard it. A "no" becomes a node:
+    - a. Write the flow `A → B → C → …`. Does **every arrow** have an owning epic? (An
+      arrow with no owner is a missing epic — that is how a backlog looks complete and isn't.)
+    - b. `node show` each contract → can **each consumer** do its job with ONLY those fields?
+      (A target/id/budget nobody carries is the classic hole; no gate sees it.)
+    - c. For each promise in a milestone/KR → which task **produces** it? (grep it.)
+    - d. `ls` the module you're extending → which files did you **never open**? `grep -rn`
+      each exported symbol → any with no caller that you're about to duplicate?
+    - e. Query the graph per axis: security · credentials · wall-clock timeout · logging ·
+      concurrency · reproducibility. Owned, or deferred **with a node**?
+    - f. Could a KR go green **without** the value? (Then the KR is the defect.)
+    - g. What is the laziest wrong implementation that still passes? (→ AC or `risk`.)
+      Includes: does any metric prove its own instrument is plugged in?
+11. **STOP for the human:** "backlog ready, N tasks, critic swept with evidence (findings: …)
+    — run `graph-builder-leafcutter`."
 
 **Never:** write/edit code, create/switch a git branch or commit, or inject a task whose
 AC has no concrete, checkable value.
@@ -133,11 +148,27 @@ The project's golden rules, distilled for ANALYZE/DESIGN/PLAN. Non-negotiable:
 
 ## Mandatory Flow
 
+This chain is a **Generator–Critic (Reflection) loop**, not a straight line: the injection
+half generates, Step 5.5 attacks it with tools, findings become nodes, repeat until the
+critic comes back empty **with evidence**.
+
 ```
-[investigate graph + git + code → find WHITE SPACE]  → (checkpoint human on direction)
+        ┌──────────────────────── GENERATOR ────────────────────────┐
+[investigate graph + git + code → find WHITE SPACE] → (checkpoint human on direction)
   → generate-prd / import-prd → decompose → node add + edge add (epics·tasks·AC)
-  → gaps (close required) → validate AC (agf check) → verify tree → STOP for human ⇆ iterate
+  → gaps (close required) → validate AC (agf check) → verify tree
+        └───────────────────────────┬───────────────────────────────┘
+                                    ▼
+            COMPLETENESS CRITIC (Step 5.5 — 7 tool-grounded sweeps)
+                     findings → nodes ──┐
+                                    ▲   │ (loop until empty, with evidence)
+                                    └───┘
+                                    ▼
+                          STOP for human ⇆ next cycle
 ```
+
+The critic is **mandatory and self-triggered**. A human asking "did anything get left out?"
+means the loop never closed — that pass must run before they ever see the backlog.
 
 The chain ends by **stopping for the human** with a complete PRD in the graph. It
 never enters IMPLEMENT — it hands the backlog to the builder.
@@ -283,6 +314,11 @@ re-investigate the codebase to start, the node isn't done. **Epic nodes** carry 
   `RELEASE:` `FIX:` `DOCS:`. One atomic outcome (≤2h).
 - **Description** — the _why_ + exact EXPAND pointers: the real file paths and symbols
   the executor must touch in **your** repository, and an explicit "do not recreate".
+  **Trap: spell each path out — never a brace-glob shorthand.** Writing
+  `src/cli/commands/{init,start,doctor}-cmd.ts` in a description trips the
+  `phantom_pointer` gap: the detector reads the whole glob as ONE nonexistent file and
+  flags the node (and misleads the builder into hunting a path that isn't there). List
+  the three real paths separately (`…/init-cmd.ts, …/start-cmd.ts, …/doctor-cmd.ts`).
 - **AC** — 2–4 discrete `--ac` Given-When-Then criteria, each independently testable
   with a concrete fixture (`new Database(':memory:')`, stub-LLM token counter). Make
   them **observable**: a number, a boolean, a status code, an exact string. Weak
@@ -372,11 +408,103 @@ planning defect: the task hasn't been taken through `in_progress → done` yet (
 the builder's job). The binding signal for planning quality is **AC present on every
 task + AC-score ≥ 60**. Confirm that, not a green DoD.
 
+On the same fresh backlog, `consumer_proof` and `no_unresolved_blockers` also fail by
+construction — nothing is built and the deps don't exist yet. Read the DoD's own
+`ac_quality_pass` line (it prints the score against its minimum) as the planner's real
+signal; the aggregate `ready:false` is about the builder's future, not your tree.
+
+**Some quality checks are opaque heuristics — do NOT reverse-engineer them.** Checks like
+`has_testable_ac` (DoD) and `adr_quality` (design gate) classify prose by undocumented rules:
+ACs carrying explicit values (`llm_calls == 0`, `probes_recorded == 3`) still get labelled
+`weak_concrete`, and rephrasing toward the error message's own wording can score _worse_ than
+where you started. Budget **at most one** probe; if it doesn't flip, stop and say so. The AC a
+light model can execute beats the AC a regex likes — the builder reads the criterion, not the
+classifier. Binding bar: required-gaps-clean + `ac_quality_pass`.
+
+**Link `testFiles` at injection, not later.** `node update --test-files <path>` raises the DoD
+score _and_ arms the physical-triangulation gate (`phantom_done` cross-checks `testFiles`
+against the disk). A task naming its test only in prose leaves that axis unarmed — the builder
+can then claim done against a file that never existed.
+
+**ADR nodes carry the human's decisions or they evaporate.** Every choice made at the Step-2
+checkpoint is an ADR: context · decision · consequences · **alternative rejected and why** ·
+revisit trigger. Left as prose in a plan file, that reasoning is invisible to the builder and
+gets silently re-litigated cycles later. Run the adversarial ADR-challenge gate too — an ADR
+can pass it on substance while a separate format grader still scores it low (see the
+opaque-heuristics rule: don't chase the grader).
+
 **Planner DoD — sweep ALL injected nodes before stopping.** Loop `agf node show` over
 every new id and assert: each task has ≥1 AC; each non-epic node has a `parentId`;
 epics are roots (`parentId` null) and carry an Objective + KR; `depends_on` edges
 wired. Cheap, deterministic, and catches a half-built tree before the human (or the
-builder) ever sees it.
+builder) ever sees it. **Use `node show` per id — NOT `query --select`:** `query` returns a
+compressed `{id,title}` envelope, so a sweep built on it silently reports 0 rows and every
+invariant "passes". Assert the read first (`N/N` rows, every row typed) and **fail loudly** if
+not — a green check over an empty result set is the exact optimistic-oracle lie the planner
+exists to design against. Earned the hard way: a sweep reported "38/38 ✓, no task missing AC"
+while its task list was empty, because the fields sat one level deeper than the code read.
+
+#### Completeness-Critic gate (MANDATORY — run it yourself, never wait to be asked)
+
+This gate is the **Reflection / Generator-Critic** pattern (a.k.a. CRITIC) made
+mandatory: the same failure mode — a backlog that looks done and isn't — is what
+Reflection exists to kill, by **separating generation from evaluation**. You already
+played the _generator_ (injected the epics/tasks). Now **switch roles and become an
+adversarial critic** whose only job is to prove the backlog INCOMPLETE. This is a
+distinct pass in the _same_ loop — a change of posture and a fresh evaluation against
+rigid criteria, **not** a spawned sub-agent (no fan-out; golden rule 13). Run it as a
+tight cycle: **Generate → Critique → Revise → re-Critique** until the critic returns
+zero open holes; only then stop for the human.
+
+The critic's stance is **assume-incomplete-until-proven**. Do not ask "is this done?"
+(the generator always answers yes). Ask "what is MISSING that would block a builder?"
+and **force yourself to emit the list explicitly** — every missing risk, dependency,
+seam, driver, or surface — _before_ concluding, reasoning end-to-end (chain-of-thought
+over the value flow, not a glance at the node count). An empty critic list is only
+credible after the six lenses below have each been answered out loud; "I looked and it's
+fine" is the generator talking, not the critic.
+
+The DoD sweep proves the nodes that EXIST are well-formed. It says nothing about the
+nodes that SHOULD exist and don't. That is the hole a human keeps catching by feel —
+and "the human noticed" is not a process (golden rule 8: the trigger must be the
+method, not someone remembering). So **before** you stop for the human, run these six
+lenses over the whole injected backlog yourself, out loud in the close-out. Each is a
+question that has caught a real missing node; a "no" answer is a node to add (or a
+`risk` to park). Report the sweep result — `Completeness sweep: 6 lenses, N holes
+found + closed` — so the human never has to ask "algo mais?".
+
+1. **Value-chain walk — arrows AND seams.** Write the theme's end-to-end flow as an
+   explicit chain and name the owner of every **arrow** (a stage) _and_ every **seam**
+   (the data contract crossing between two stages). Unowned arrow → missing task;
+   unowned seam → missing `contract` node. (The "WALK IT" guidance in Step 3 is this
+   lens for arrows; the seam half is just as load-bearing — two epics can each be
+   complete while nobody owns the record-shape that passes between them.)
+2. **Set-coverage.** Any gate/router/activation keyed on evidence must produce evidence
+   for **every** unit it can act on, not just the flagship (see the measure→activate
+   anti-pattern). Measure 1 of N → the gate defaults 1 of N.
+3. **Consumer-surface matrix.** For every "prove value" claim, is it proven in **each**
+   surface the project ships — CLI · web/dashboard · CI-gate? A value proven only in the
+   CLI leaves the web (and the gate) consumer blind; that is a missing `COBRAR(<surface>)`
+   task, one per surface the theme touches.
+4. **Claim-staleness / reconciliation.** Does any change flip a claim asserted
+   elsewhere — generated docs (CLAUDE.md/AGENTS.md), memory, a **CI baseline**, a default
+   flag? Every flipped claim needs a reconciliation owner (a `DOCS:` or rebaseline task).
+   A default that changes from OFF→ON silently turns three things stale: the doc that
+   says "OFF", the regression baseline that priced "OFF", and the memory that recorded it.
+5. **Foundational-driver exists?** Any task that assumes a harness / suite / fixture /
+   runner — verify that thing **exists in the repo** (`ls`/`grep`), don't assume. A gate
+   that references a suite dir that was never created, or a measurement that "runs via" a
+   driver nobody built, is a missing foundational task the rest silently depends on.
+6. **Latent-inventory triple.** Enumerate every latent capability the theme names, then
+   check each has all three: **measured** ∧ **wired** ∧ **charged**. A capability with a
+   wire but no measurement (or a measurement but no consumer-surface charge) is still
+   value leaking — the theme is "activate the latent", so partial coverage is the defect.
+
+> **Direction of travel (make it deterministic).** Lenses 3–5 are mechanical enough to
+> become `agf gaps` detectors (consumer-surface coverage, claim-staleness, missing-driver)
+> — the same medir→wirar→cobrar the project preaches, applied to the planner's OWN
+> completeness so the tool fires the check instead of the human's feel. Until then, the
+> six-lens sweep is a MANDATORY manual gate, reported every cycle.
 
 **Definition of Ready (the stop gate).** Beyond per-task AC, the backlog as a whole
 must pass DoR's **7 checks** (`has_requirements`, `has_acceptance_criteria`,
@@ -385,6 +513,78 @@ owned by `agf gate`; confirm the phase via `--help`). DoR green **+** AC present
 every task with AC-score ≥ 60 = ready to stop. Unresolved Example-Map questions or
 unmapped Impact-Map deliverables block DoR — park them as `risk` nodes or
 loop back to DESIGN first.
+
+### Step 5.5 — Completeness critic (MANDATORY, tool-grounded — never hand over an uncriticised backlog)
+
+This step is the **Critic half of a Generator–Critic (Reflection) loop**: Steps 1–5 generate,
+this step attacks what they produced, findings become nodes, repeat. It is **not optional and
+never human-triggered**. If someone has to ask "did anything get left out?", the skill already
+failed — their intuition is not a control. `gaps`, DoR and `check` score **the nodes that
+exist**; nothing scores **the node you never wrote**. This is that missing scorer.
+
+**The one rule that decides whether this works — every critique MUST cite external evidence.**
+The literature is blunt about the failure mode. Huang et al., _LLMs Cannot Self-Correct
+Reasoning Yet_ (ICLR 2024, arXiv:2310.01798): **intrinsic** self-correction — a model
+critiquing itself with no external signal — **degrades** the output through overcorrection;
+merely asking "are you sure?" measurably drops quality (the FlipFlop effect, arXiv:2311.08596).
+What works is Gou et al., **CRITIC** (ICLR 2024, arXiv:2305.11738): _tool-interactive_
+critiquing — verify against external tools, then amend — whose stated conclusion is "the
+crucial importance of external feedback".
+
+So: **a sweep is not a thought, it is a command.** Each finding below must name the tool
+output that produced it — a `grep` hit, a file you opened, a `node show`, a graph query. A
+finding with no external evidence is hallucinated critique and must be discarded, not
+injected. A sweep that "looks fine on reflection" was not run. This is the same principle as
+golden rule 8 (enforcement = deterministic trigger, not an agent remembering), applied to
+critique itself: the critic must be grounded in something outside the model.
+
+**Answer each sweep from a FRESH read, not by re-reading your plan (Chain-of-Verification,
+factored — Dhuliawala et al., ACL 2024, arXiv:2309.11495).** CoVe's measured result is that
+verification questions answered by _re-reading the original draft_ just re-confirm it; the
+**factored** variant — answer each question independently, from a source that does not include
+your own reasoning — is what actually catches the error. Operationally: a sweep's evidence must
+come from a NEW `grep`/`node show`/`ls` against the repo or graph, never from the plan text you
+just wrote. "I described the flow correctly above" is the draft confirming itself; run the
+query again over the graph. Factored verification is why the loop earned three passes this
+cycle — each sweep re-read the world, not the plan.
+
+Run **all seven** before Step 6, every cycle, and report the result — including "swept,
+nothing found". Each sweep pairs a question with the tool that answers it:
+
+| #   | Sweep                      | The question                                                                                                                        | Grounded by                                                                                                                         |
+| --- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Arrows, not boxes**      | Write the flow `A → B → C`. Does **every arrow** have an owning epic?                                                               | graph query per stage; an arrow with no owner = missing epic                                                                        |
+| 2   | **Contract sufficiency**   | For each `contract`, can **each consumer** do its job with ONLY those fields?                                                       | `node show` the contract; list consumers; a field everyone needs and nobody carries (target, id, budget) is invisible to every gate |
+| 3   | **Promise ownership**      | For each claim in a milestone/KR: which task **produces** it?                                                                       | grep the milestone text; search tasks per promise. A promise with no producer is the thing you'd report as delivered                |
+| 4   | **Modality not run**       | Which files of the module you extend did you **never open**? Any exported-but-uncalled symbol you're about to duplicate?            | `ls` the module, `grep -rn` each symbol's callers. Unread file = unverified DRY claim                                               |
+| 5   | **NFR axes**               | Owned or _consciously deferred with a node_: security · credentials · wall-clock timeout · logging · concurrency · reproducibility? | graph query per axis. "Nobody thought about it" is not deferral                                                                     |
+| 6   | **Goodhart**               | Could a KR go green **without** delivering the value?                                                                               | read each KR against a plausible trivial implementation — the outcome-level twin of a weak AC                                       |
+| 7   | **Failure-mode inversion** | What is the **laziest wrong implementation that still passes**?                                                                     | read each AC set adversarially → the answer is a missing AC or a `risk`                                                             |
+
+Sweep 7 has a special case worth naming: **instruments lie by omission.** A ledger reports
+`cost == 0` just as happily when nobody wired the counter as when nothing was spent. Any KR
+measured by your own instrument needs an AC proving the instrument **moves** (inject a fake
+cost → the counter must rise). Otherwise the metric proves only that it is unplugged.
+
+Findings are not prose — each becomes a node (task · contract update · risk · ADR) or an
+explicitly recorded deferral. Then re-run `gaps` and re-sweep. **Report every finding to the
+human with its evidence**, so the critique is auditable rather than trusted.
+
+**Convergence — TWO consecutive empty sweeps, not one.** A single clean pass does not mean
+done: **closing a hole can open another** (a new node has its own arrows, contracts, and
+instruments to critique). So the stop condition is a sweep that finds nothing **run against
+the backlog the previous sweep already revised** — i.e. two clean passes back-to-back. Earned
+this session: round 1 added a timeout risk + an instrument-fidelity AC; round 2, sweeping the
+revised tree, found a fresh unowned seam (two `cobrar` tasks reading a shape no `contract`
+described); round 3 came back empty. Three passes, because each revision is new surface.
+
+**The stop signal is convergence, NOT an exhausted budget.** If session write-capacity remains
+after two clean sweeps, that is not a reason to keep injecting — manufacturing speculative
+nodes to fill capacity is over-production (Lean), the opposite of completeness. Spend any
+remaining budget on **depth** the sweeps already justified (a missing contract's exact
+`file:line` field sources, an ADR's rejected-alternative, a risk's mitigation-as-AC), never on
+inventing new scope the critic did not surface. Empty critic + required-clean = stop, regardless
+of budget left.
 
 ### Step 6 — Stop for the human ⇆ iterate (the loop)
 
@@ -410,11 +610,30 @@ push. Frame KRs as **prove OR disprove**: an A/B that comes back against the fea
 successful cycle, not a failure — the default-OFF lever is the safety. Transient facts (counts,
 versions) go to memory, never the skill.
 
+**Record WHY the hole existed, not just that it did (Reflexion — Shinn et al., NeurIPS 2023,
+arXiv:2303.11366).** Reflexion's result is that an agent improves across attempts only when it
+writes a _verbal reflection on the cause of the miss_ and the next attempt reads it — the fix
+alone doesn't transfer, the reason does. So when Step 5.5 catches a hole, the durable lesson is
+not "I added a timeout risk" (a transient fact → memory) but the **generator blind-spot that let
+it through** ("a live-measurement task looks complete without a timeout owner because the happy
+path never hangs") — that sentence, command-agnostic, is what belongs in THIS skill so the next
+generator never emits the blind spot again. The skill IS the persistent reflection buffer; each
+cycle's critic findings are its training signal.
+
 ## Anti-Patterns
 
 - Do NOT write code, tests, or stubs, and do NOT touch git (no commit, no new/switched
   branch) — the deliverable is graph nodes; implementation + branch-per-feature is the
   builder's. If you opened an editor, you left the planner — revert and node-ify it.
+- Do NOT hand over a backlog whose completeness critic (Step 5.5) never ran. If the human has
+  to ask "did anything get left out?", the skill failed. Report the sweep every cycle — even
+  when it finds nothing.
+- Do NOT critique by introspection — "let me re-read my plan and see if it's complete" is
+  **intrinsic** self-correction, which measurably makes output WORSE (Huang et al. 2023);
+  every sweep must cite a tool result (grep/file/graph), per CRITIC (Gou et al. 2023).
+- Do NOT mistake green gates for completeness. `gaps`, DoR and `check` score the nodes that
+  EXIST; none can see the epic you never wrote. A fully green tree with a missing stage is
+  the normal way this fails.
 - Do NOT chase global `agf gaps` debt — filter to your own node ids; only your subtree
   must be required-clean
 - Do NOT add a `requirement`/NFR/`contract` node without wiring a task that `implements`
@@ -434,6 +653,13 @@ versions) go to memory, never the skill.
   expected; the planner bar is AC-present + AC-score ≥ 60
 - Do NOT ship an epic with tasks but no measurable outcome/KR — that is output blind to
   outcome; give every epic an Objective + Key Result
+- Do NOT let a **measure→activate** pair measure only the flagship unit. When an epic
+  gates activation on evidence (smart-defaults, auto-tuning, a router that flips a
+  behaviour per item), the paired measurement task must produce evidence for **every**
+  unit the gate can flip — not just the one you started with. Measure 1 of N and the
+  gate can only ever default that 1; the other N−1 stay dark. Budget one measurement
+  leaf covering the whole activatable set (or a loop over it), wired `depends_on` before
+  the gate.
 - Do NOT call a story "ready" with rules but no examples, or with unresolved Example-Map
   questions — convert each to a `risk` node or send it back to DESIGN
 
