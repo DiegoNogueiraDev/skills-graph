@@ -77,10 +77,18 @@ never code/git.** Top to bottom, obey every **STOP**/**DEFAULT**.
 4. `agf generate-prd "<idea>"` (or `agf import-prd <file>`).
 5. Per epic: `agf node add --type epic …` with **Objective + 1 measurable Key Result**
    in the description (a number/percent/latency — not "improve X").
-6. `agf decompose`. Every leaf ≤2h and self-sufficient:
+6. `agf decompose`. **Slice outside-in from the surface the user operates** (web → the
+   frontend screen; agf → the CLI command; API → the endpoint). Every leaf ≤2h and
+   self-sufficient:
+   - each leaf = **ONE control on that surface proven end-to-end** (button/field/screen),
+     not a backend layer — e.g. "the _Run_ button on the rules screen returns true/false",
+     not "build the rule engine"
+   - backend/data work is only a leaf wired `depends_on` a surface AC that fails without
+     it — pull it, never plan it top-down
    - title `IMPLEMENT:|WIRE:|FIX:|DOCS: <one outcome>`
    - description: the WHY + **exact file paths** to touch (`src/…`) + "do not recreate"
-   - 2–4 `--ac` lines, each **Given-When-Then** with a concrete number/boolean/string
+   - 2–4 `--ac` lines, each **Given-When-Then** with a concrete number/boolean/string,
+     observable at the surface (números batem / estado renderizado / true|false)
    - the exact test file `src/tests/<stem>.test.ts`
 7. Priority tag — use this table, no judgement:
 
@@ -289,6 +297,61 @@ commit only the **walking-skeleton / MVP release slice** this cycle — the thin
 end-to-end runnable path (Pareto + JIT). Deeper stories stay as deferred
 `should`/`could` epics for the next cycle to pull without re-planning.
 
+#### Slice CONSUMER-SURFACE-FIRST (outside-in) — the DEFAULT decomposition axis
+
+agf is a factory that generates **N different apps** depending on what the dev drives it
+toward. Whatever the app, the backbone starts where the **user actually operates** the
+product, and every slice must PROVE itself there. The surface differs per app; the axis
+is the same:
+
+| app kind         | consumer surface = where you slice first                                              |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| web / admin      | **the screen + its controls** (a route, its buttons/fields/tables) — the primary case |
+| CLI (agf itself) | the **command** (`agf <cmd>` output)                                                  |
+| API / service    | the **endpoint** (request → response)                                                 |
+
+**Why outside-in wins — the foundations (this is not a preference, it's grounded):**
+
+- **Walking Skeleton + Outside-In TDD** — Cockburn's walking skeleton ("the thinnest
+  possible slice of real functionality built, deployed, and tested end-to-end") + Freeman &
+  Pryce's _Growing Object-Oriented Software, Guided by Tests_ (2009): drive tests from the
+  outside-in — the acceptance test lives at the surface the user touches, and it PULLS every
+  inner class into existence. Nothing inner gets built that no outer test demands.
+- **OKR** — Grove (Intel, 1970s; popularised by Doerr, _Measure What Matters_): the Key
+  Result measures the **outcome, not the output**. So the epic's KR is the surface
+  _operating_, observed — not "the service exists".
+- **Stigmergy / ant colonies** — Grassé (1959) → Dorigo's ACO (1992), which agf already runs
+  in the builder: no ant holds the global plan; each completes **one local action** and the
+  colony converges by reinforcing successful traces. A green AC at the surface is the
+  pheromone that marks the path toward the objective — outside-in slicing IS the colony
+  rule, and the OKR is the gradient it climbs. (The builder is literally `leafcutter`:
+  cut from the leaf's edge — the surface — inward.)
+- **Little's Law / Lean pull** — thin end-to-end slices keep WIP small → shorter cycle time
+  → faster time-to-market; the app demos from the tip on day one instead of a backend that
+  "compiles" for weeks behind a dead UI. Value, assertiveness, quality, speed — all from
+  making the promised behaviour observable early, in the consumer's mode (`_shared.md`
+  Golden Rule 16).
+
+**How it lands in the graph:**
+
+- **Each leaf = ONE control on the surface, proven end-to-end.** Not "build the rules
+  service" but "the _Run_ button on the rules screen evaluates and renders true/false" — the
+  whole vertical (control → API → domain logic → store → rendered result) for that one
+  control, wired and clicking.
+- **Backend/data work is PULLED, never pushed.** Do NOT plan a backend epic top-down. A
+  backend task exists only as a leaf wired `depends_on` a **surface AC that fails without
+  it** — the failing surface operation is what justifies the descent. Every inner node stays
+  traceable to a control the user can see.
+- **The epic's Key Result is the surface operating whole**, observable at the surface: _"the
+  batch screen processes a real batch — the totals reconcile, eligible vs non-eligible each
+  carry a reason, and export/upload/bulk-insert are all wired and clickable"_ — a number + a
+  boolean + a rendered state, never "it works". A control on the screen with no leaf that
+  proves it = incomplete epic (the arrow/seam sweep, applied to UI controls).
+- **Order:** a screen's controls become sibling leaves; a control another depends on (create
+  the record **before** you run it) gets a `depends_on` edge. Screens order left→right along
+  the journey — unless a screen must exist first because others read what it configures
+  (a rules screen sits **above** the flow that consumes those rules).
+
 ### Step 4 — Structure as graph + decompose to atomic tasks
 
 ```bash
@@ -479,6 +542,16 @@ found + closed` — so the human never has to ask "algo mais?".
    unowned seam → missing `contract` node. (The "WALK IT" guidance in Step 3 is this
    lens for arrows; the seam half is just as load-bearing — two epics can each be
    complete while nobody owns the record-shape that passes between them.)
+   **Aggregator-without-producer — the seam's most expensive shape.** When the theme is
+   "prove/aggregate/score X" (a verdict fusing N signals into one confidence), the
+   generator blind-spot is shipping the READER of each signal but not its PRODUCER. It
+   looks complete because on the happy path the signals are green — but the signal that
+   is usually EMPTY (a consumer-proof, an outcome, an attestation nobody records) has no
+   task that FILLS it, so the verdict is structurally stuck at its incomplete band and
+   the "means" are never legible. For every pillar an aggregation epic reads, name the
+   task that PRODUCES it (grep the writer); a pillar with a reader and no producer is an
+   unowned seam. And when the theme is "make the means explicit," the contract must carry
+   a per-signal `rationale`/why field — otherwise the explain surface invents it.
 2. **Set-coverage.** Any gate/router/activation keyed on evidence must produce evidence
    for **every** unit it can act on, not just the flagship (see the measure→activate
    anti-pattern). Measure 1 of N → the gate defaults 1 of N.
@@ -565,6 +638,19 @@ Sweep 7 has a special case worth naming: **instruments lie by omission.** A ledg
 `cost == 0` just as happily when nobody wired the counter as when nothing was spent. Any KR
 measured by your own instrument needs an AC proving the instrument **moves** (inject a fake
 cost → the counter must rise). Otherwise the metric proves only that it is unplugged.
+
+Sweep 7's twin, earned the hard way: **evidence lies by provenance.** An oracle that keys on
+_absence_ of evidence (`data is None → inconclusive`) is structurally blind to _evidence from
+the wrong source_ — which is the likelier failure. The generator blind-spot: a target contract
+that carries WHERE to go (`url`) but makes proving-you-arrived optional (`ready_probe: Probe|None`)
+looks complete, because on the happy path you always land on the right page. Then reality
+redirects — an auth wall, a consent gate, an error page, a stale SPA route — and the wrong page
+loads _perfectly_: HTTP 200, a valid read, a plausible number (usually 0). That number becomes a
+false `fail` (the system never broke; the test never arrived), or a false `pass` when the KR
+happens to expect 0. Every gate stays green because every node is well-formed. So: **any node
+that reads a value from somewhere must carry the provenance of that read, and identity of the
+source is asserted BEFORE the value is compared.** When you write a contract with an optional
+validate/identity field, ask what loads successfully when you're in the wrong place.
 
 Findings are not prose — each becomes a node (task · contract update · risk · ADR) or an
 explicitly recorded deferral. Then re-run `gaps` and re-sweep. **Report every finding to the
@@ -653,6 +739,15 @@ cycle's critic findings are its training signal.
   expected; the planner bar is AC-present + AC-score ≥ 60
 - Do NOT ship an epic with tasks but no measurable outcome/KR — that is output blind to
   outcome; give every epic an Objective + Key Result
+- Do NOT plan a backend/data epic top-down. Slice **outside-in from the consumer surface**
+  (screen/command/endpoint the user operates); a backend leaf exists only wired
+  `depends_on` a **surface AC that fails without it** — pull it, never push it. A backend
+  node with no surface control tracing back to it is speculative work (Walking Skeleton /
+  GOOS outside-in TDD) and inflates time-to-market for zero observable value
+- Do NOT frame a KR as an inner artifact ("the service exists", "the parser is done"). The
+  KR is the **surface operating whole**, observed in the consumer's mode — a number, a
+  boolean, a rendered state (`_shared.md` Golden Rule 16). A control on the screen with no
+  leaf that proves it end-to-end = incomplete epic
 - Do NOT let a **measure→activate** pair measure only the flagship unit. When an epic
   gates activation on evidence (smart-defaults, auto-tuning, a router that flips a
   behaviour per item), the paired measurement task must produce evidence for **every**

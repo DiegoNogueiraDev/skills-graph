@@ -396,6 +396,20 @@ quality gate every time it fires. **Measure before you narrow**: a deterministic
 directory-only matches) — narrow on the datum, never on a hunch, and keep BOTH regression
 assertions (the innocuous case stops firing AND the genuine case still bites).
 
+**The lexical twin of that class: a code-pattern scanner that greps RAW source text
+counts matches inside COMMENTS and STRING LITERALS.** A heuristic that flags
+`catch (e) {}`, `throw new Error(`, `console.error(` by regex over `file.content`
+directly will count a `catch (e) {}` sitting in a `// comment` or a `"string literal"`
+as a real defect — a phantom violation no production fix can resolve (found live: an
+error-handling scanner flagged the silent-failure detector because the DETECTOR'S OWN
+doc-comment contained the pattern it hunts). The pattern text is code; the occurrence is
+prose. Fix: strip comments and string/template literals — preserving offsets so line
+numbers stay accurate — BEFORE matching, and reuse ONE shared stripper across every
+sibling scanner (DRY) rather than each re-inventing it. Prove the guard still bites: a
+REAL empty-catch in code must still count; only the comment/string occurrence is ignored.
+Free repro: feed the scanner a file whose only match is inside a comment and inside a
+string — a non-zero count is the bug.
+
 **A silent infinite loop hides as a fast, "successful", zero-work result — root cause: a
 state-machine TRANSITION gated on the WRONG SIGNAL.** A pipeline that ran maxSteps in ~2ms
 with 0 output and reported a bland "resolve=0" (no error) turned out to loop one phase

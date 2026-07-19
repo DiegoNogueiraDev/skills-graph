@@ -379,6 +379,10 @@ Every delivery cycle ends with this report to the human. It is how trust is buil
 | ----------------------- | ------------------------------------------------------- | ---------------------------- |
 | **<ID> <título curto>** | 1-2 frases do que mudou e POR QUÊ (o valor, não o diff) | <n> testes · `<commit-hash>` |
 
+**Valor no produto:** para CADA entrega, 1 frase objetiva do ganho no TODO do produto — que capacidade end-to-end ela destrava, aproxima ou torna confiável, do ponto de vista de quem usa o produto, NÃO o que o código faz isolado. Diga o efeito no sistema inteiro ("o oráculo agora recusa falso-sucesso → qualquer verde do produto virou confiável"; "a bridge lê o dataset inteiro sem rolar → o diferencial vs Selenium está de pé"), nunca o mecanismo ("criei a função judge()"). Se uma entrega não move nada perceptível no produto, diga isso — é sinal de capacidade dormente (regra 9).
+
+**Progresso do backlog:** **X% concluído do backlog planejado** — com os números absolutos (`Y/Z tasks done`) e a fonte real, nunca estimado. Compute do grafo: tasks `done` ÷ total de tasks planejadas (`agf stats --select data.byStatus` para o corte por status; se precisar do total só de `task`, cruze com `agf query --type task`). Reporte o task-completion (não o node-count total, que infla com epic/contract/risk/KR). Uma frase de contexto ajuda ("as fundações E1–E5 fecharam; falta o pipeline E10 e a camada de adjudicação E13"), para o humano ver quanto do PLANO já virou realidade e o que falta.
+
 **Achado transversal:** (se houver) o padrão/bug de classe descoberto que atravessa entregas — a informação que o humano não pediu mas precisa saber.
 
 **Honestidade:** assunções documentadas, nodes de risco criados (`node_xxx`), violações pré-existentes bypassed com justificativa.
@@ -386,4 +390,4 @@ Every delivery cycle ends with this report to the human. It is how trust is buil
 **Próximo: <TASK> — porque [fundamento nomeado]** (ROI/maior-alavanca · Pareto 80/20 · TOC/gargalo · risco-primeiro · ordem-de-dependência · dado medido). Siga nele por padrão; alternativas só como nota curta, nunca como pergunta aberta.
 ```
 
-Rules of the format: **lead with the outcome**; every claim carries a physical proof (test count + commit hash); transversal findings get their own line; the next step is a DECISION with a named principle, not a menu of options. Exception: genuinely-the-human's calls (cost, scope, irreversible risk) — then ask, but with your recommendation first.
+Rules of the format: **lead with the outcome**; every claim carries a physical proof (test count + commit hash); **every delivery states its product-level value (effect on the whole, not the mechanism) AND the batch reports % of the planned backlog done (real graph numbers, task-completion, never estimated)**; transversal findings get their own line; the next step is a DECISION with a named principle, not a menu of options. Exception: genuinely-the-human's calls (cost, scope, irreversible risk) — then ask, but with your recommendation first.

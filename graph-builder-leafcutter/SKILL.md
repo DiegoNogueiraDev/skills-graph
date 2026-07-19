@@ -257,6 +257,17 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
 - **TDD Red→Green→Refactor:** write the failing test from the AC's Given-When-Then →
   watch it fail → minimal code to pass → **refactor applying Clean Code + SOLID**
   (tests stay green). One assertion focus per test; positive + negative + edge cases.
+- **Outside-in when the task is a surface control (the planner slices this way).** Start
+  the RED test at the **consumer surface** the AC names — the screen/command/endpoint the
+  user operates — not at an inner class. Then drive **only inward as the failing surface
+  operation demands**: build the API, then the domain logic, then the store, each pulled by
+  the surface test still being red. This is Cockburn's walking skeleton + Freeman & Pryce's
+  outside-in TDD (GOOS): nothing inner exists that no outer test pulled into being — which
+  is exactly why it delivers with zero speculative backend. `done` for such a leaf = the
+  **control is wired and operable end-to-end** (clicks → real effect → rendered result) AND
+  the epic's OKR/KR moves — observed at the surface, never "the unit is green". A surface
+  task whose test only exercises an inner function (never the wired control) is the
+  optimistic-oracle lie — it goes green while the button does nothing.
 - Keep additive/opt-in (default OFF = byte-identical) so existing tests stay green
   — this is how you get **zero regression** for free.
 - Output stays compressed (`--ai`, `--select`) to minimise tokens.
@@ -366,6 +377,18 @@ Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
   modules share a key format, either export ONE constant both use or write one
   integration test that runs producer→consumer for real. Make the fixture exercise the
   exact thing that differs.
+- **The OUTPUT layer can delete your feature silently — a generic-sounding payload key
+  gets stripped as noise and the unit tests never notice.** A CLI whose default mode
+  compresses envelopes usually carries a deny-list of "drill-down noise" keys removed at
+  ANY depth (`rationale`, `summary`, `reason`, `explanation`, `detail`, `notes`…). Ship a
+  command whose PRIMARY payload happens to use one of those names and the value is stripped
+  on the way out: core tests green, command "works", human sees nothing — dormant capability
+  with a passing suite. Two rules: (1) after wiring any new output, READ THE REAL COMMAND
+  OUTPUT in the default mode (not `--select`, which bypasses the trim) and grep for your key
+  — its absence is the bug; (2) these compressors ship a per-command **owned-keys exemption
+  table** for exactly this case — register your command's payload key there with a comment
+  saying why, and add BOTH regression assertions (survives for the owning command, still
+  stripped for a non-owner). Earned when `--explain`'s entire "why" payload shipped invisible.
 
 **Skill hardening (MANDATORY close-out — see `_shared.md` → Golden Rule 17):** before you
 hand back, ask "what durable lesson from this cycle must the NEXT builder read _here_?" A
