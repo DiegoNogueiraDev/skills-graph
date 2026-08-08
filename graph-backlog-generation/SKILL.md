@@ -39,11 +39,8 @@ implements. Plans only; never writes production code.
 
 When this skill is invoked you **cannot write code**. Not a stub, not a test, not a
 one-line edit, not "just to verify a shape". The **only** artifacts you produce are
-**graph nodes** (`node add` / `edge add` / `node update`) plus the plan/handoff text.
-If you catch yourself opening an editor, creating a `*.ts` / `*.test.ts` file, or
-editing a source file — **STOP: you have left the planner.** Revert it and put the
-intent into a task node instead. Implementation and the TDD that proves it belong to
-`graph-builder-leafcutter`, pulled later via `agf start`.
+
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "⛔ Hard rule — PLAN ONLY, zero code (read this first)". Carregue sob demanda.
 
 The planner also **never touches git**: no `commit`, no new/switched branch. The
 backlog lives in the shared, gitignored `workflow-graph/graph.db` — it persists across
@@ -237,11 +234,7 @@ A backlog of 1000+ nodes is normal — the planner's hardest job is _not adding
 duplicates_. Prefer wiring dormant/partial code over net-new (golden rule); the
 strongest epics come from code that existed but was unwired.
 
-**Surface C — WIRE-tasks the builder already blocked with a real finding.** The
-builder (graph-builder-leafcutter) triages `wire-dormant` harvest output into 5
-buckets; only one is a mechanical wire it can close alone. The other four land as
-`blocked` nodes with the investigation already written in the description — this is
-**pre-digested planning material**, cheaper to consume than a fresh repomix pass:
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 1 — Investigate & find white space (dogfood)". Carregue sob demanda.
 
 ```bash
 agf query --type task --status blocked --select 'data[].{id,description}'
@@ -274,13 +267,7 @@ epic carries an **OKR-style measurable outcome** (Objective + ≥1 Key Result) s
 ships outcome, not just output. Order the Pareto-selected Must/Should set by **WSJF**
 (Cost of Delay ÷ Job Size) to sequence biggest-value-soonest. See references.
 
-**Checkpoint the human BEFORE injecting** — this is the **Three Amigos** moment (the
-human plays Product + Test over your draft) — when the backlog is saturated or the
-value direction is ambiguous: present 2–4 grounded, low-duplication value themes (an
-AskUserQuestion-style multi-select, recommended option first) and let them steer.
-Picking the wrong theme into a saturated backlog is the most expensive planner
-mistake — one cheap question prevents a whole wasted injection. Skip the question
-only when the user already named the exact scope.
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 2 — Frame the problem & confirm direction". Carregue sob demanda.
 
 ### Step 3 — Generate / import the PRD
 
@@ -310,27 +297,7 @@ is the same:
 | CLI (agf itself) | the **command** (`agf <cmd>` output)                                                  |
 | API / service    | the **endpoint** (request → response)                                                 |
 
-**Why outside-in wins — the foundations (this is not a preference, it's grounded):**
-
-- **Walking Skeleton + Outside-In TDD** — Cockburn's walking skeleton ("the thinnest
-  possible slice of real functionality built, deployed, and tested end-to-end") + Freeman &
-  Pryce's _Growing Object-Oriented Software, Guided by Tests_ (2009): drive tests from the
-  outside-in — the acceptance test lives at the surface the user touches, and it PULLS every
-  inner class into existence. Nothing inner gets built that no outer test demands.
-- **OKR** — Grove (Intel, 1970s; popularised by Doerr, _Measure What Matters_): the Key
-  Result measures the **outcome, not the output**. So the epic's KR is the surface
-  _operating_, observed — not "the service exists".
-- **Stigmergy / ant colonies** — Grassé (1959) → Dorigo's ACO (1992), which agf already runs
-  in the builder: no ant holds the global plan; each completes **one local action** and the
-  colony converges by reinforcing successful traces. A green AC at the surface is the
-  pheromone that marks the path toward the objective — outside-in slicing IS the colony
-  rule, and the OKR is the gradient it climbs. (The builder is literally `leafcutter`:
-  cut from the leaf's edge — the surface — inward.)
-- **Little's Law / Lean pull** — thin end-to-end slices keep WIP small → shorter cycle time
-  → faster time-to-market; the app demos from the tip on day one instead of a backend that
-  "compiles" for weeks behind a dead UI. Value, assertiveness, quality, speed — all from
-  making the promised behaviour observable early, in the consumer's mode (`_shared.md`
-  Golden Rule 16).
+> **Por que outside-in vence** (Walking Skeleton de Cockburn, GOOS, OKR, estigmergia/ACO, Little's Law): [references/field-lessons.md](references/field-lessons.md) → "Fundações do outside-in". A regra está acima; a fundamentação é consulta.
 
 **How it lands in the graph:**
 
@@ -382,6 +349,13 @@ re-investigate the codebase to start, the node isn't done. **Epic nodes** carry 
   `phantom_pointer` gap: the detector reads the whole glob as ONE nonexistent file and
   flags the node (and misleads the builder into hunting a path that isn't there). List
   the three real paths separately (`…/init-cmd.ts, …/start-cmd.ts, …/doctor-cmd.ts`).
+  **Same trap, second shape: never let a path be immediately followed by a colon.**
+  Prose like `EXPAND src/cli.ts: the command switch lives here` makes the detector read
+  `src/cli.ts:` (colon included) as the filename — the file exists, the pointer is what's
+  malformed. Write `EXPAND the file src/cli.ts — the command switch…` instead, and keep
+  line references in separate words (`lines 337-386`), never glued as `path.ts:337`.
+  Both shapes are **class (a) obsolete/malformed pointer**, not a missing artifact: fix
+  the pointer, never re-aim the node at a plausible neighbour to silence the gate.
 - **AC** — 2–4 discrete `--ac` Given-When-Then criteria, each independently testable
   with a concrete fixture (`new Database(':memory:')`, stub-LLM token counter). Make
   them **observable**: a number, a boolean, a status code, an exact string. Weak
@@ -438,74 +412,12 @@ agf check <taskId>                    # per-task DoD; the planner bar is AC-pres
 agf gate <phase>                      # phase-readiness gate — confirm the phase with `agf gate --help`
 ```
 
-**Verify before you call (command-agnostic).** Phase names and flags drift between
-versions — `agf gate analyze` does **not** exist in current builds (valid phases:
-`design · review · handoff · deploy · listening · all`), and `agf gaps` may not
-accept `--json` yet (parse the text envelope or use `--select`). Always confirm with
-`agf gate --help` / `agf gaps --help` (or `agf retrieve-command`) rather than assuming.
-
-**`agf gaps` scans the WHOLE graph, not your subtree.** In a repo with a 1000+ node
-backlog it returns piles of _pre-existing_ required gaps that are **not yours** — do
-not chase them. Filter the report to the node ids you just created (grep your ids) and
-close only those; `ready: false` and a red DoR gate usually reflect the whole graph,
-not your epic. **Trap:** every `requirement`/NFR (and often `contract`) node you add
-becomes a NEW required gap — _"requirement with no implementing task"_ — until you wire
-a task → it via `implements`. Always close that loop on the support nodes you create,
-then re-run gaps filtered to your ids to confirm **0 required in your subtree**.
-
-**Two required-gap traps on fresh backlog (earned empirically — budget them at `node add`
-time, or fix later via `node update --ac` which replaces `ac[]` in place):** (1) `missing_edge_case` reads the task's OWN `ac[]` and
-wants an explicit error/failure/limit case — a happy-path-only AC set trips it even when the
-_description_ mentions edge cases, and adding a child `acceptance_criteria` node does **NOT**
-close it (only the task's inline `--ac` counts). Budget one error/limit GWT `--ac` per task
-up front. (2) An epic with children but an empty own `ac[]` trips `blocking_container`; close
-it by adding `acceptance_criteria` **child** nodes carrying the epic's Key Result (the epic's
-own `ac[]` legitimately stays empty). And treat `status_flow_valid` + `no_unresolved_blockers`
-"failures" on fresh backlog as EXPECTED, never a defect: deps aren't built yet and nothing has
-passed through `in_progress` — the planner bar remains AC-present + AC-score >= 60 + subtree
-required-clean.
-
-**What "validated" means for fresh planner backlog.** `agf check` on a backlog task
-will report `status_flow_valid: failed` — that is **expected and correct**, not a
-planning defect: the task hasn't been taken through `in_progress → done` yet (that's
-the builder's job). The binding signal for planning quality is **AC present on every
-task + AC-score ≥ 60**. Confirm that, not a green DoD.
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 5 — Close gaps & validate". Carregue sob demanda.
 
 On the same fresh backlog, `consumer_proof` and `no_unresolved_blockers` also fail by
 construction — nothing is built and the deps don't exist yet. Read the DoD's own
 `ac_quality_pass` line (it prints the score against its minimum) as the planner's real
 signal; the aggregate `ready:false` is about the builder's future, not your tree.
-
-**Some quality checks are opaque heuristics — do NOT reverse-engineer them.** Checks like
-`has_testable_ac` (DoD) and `adr_quality` (design gate) classify prose by undocumented rules:
-ACs carrying explicit values (`llm_calls == 0`, `probes_recorded == 3`) still get labelled
-`weak_concrete`, and rephrasing toward the error message's own wording can score _worse_ than
-where you started. Budget **at most one** probe; if it doesn't flip, stop and say so. The AC a
-light model can execute beats the AC a regex likes — the builder reads the criterion, not the
-classifier. Binding bar: required-gaps-clean + `ac_quality_pass`.
-
-**Link `testFiles` at injection, not later.** `node update --test-files <path>` raises the DoD
-score _and_ arms the physical-triangulation gate (`phantom_done` cross-checks `testFiles`
-against the disk). A task naming its test only in prose leaves that axis unarmed — the builder
-can then claim done against a file that never existed.
-
-**ADR nodes carry the human's decisions or they evaporate.** Every choice made at the Step-2
-checkpoint is an ADR: context · decision · consequences · **alternative rejected and why** ·
-revisit trigger. Left as prose in a plan file, that reasoning is invisible to the builder and
-gets silently re-litigated cycles later. Run the adversarial ADR-challenge gate too — an ADR
-can pass it on substance while a separate format grader still scores it low (see the
-opaque-heuristics rule: don't chase the grader).
-
-**Planner DoD — sweep ALL injected nodes before stopping.** Loop `agf node show` over
-every new id and assert: each task has ≥1 AC; each non-epic node has a `parentId`;
-epics are roots (`parentId` null) and carry an Objective + KR; `depends_on` edges
-wired. Cheap, deterministic, and catches a half-built tree before the human (or the
-builder) ever sees it. **Use `node show` per id — NOT `query --select`:** `query` returns a
-compressed `{id,title}` envelope, so a sweep built on it silently reports 0 rows and every
-invariant "passes". Assert the read first (`N/N` rows, every row typed) and **fail loudly** if
-not — a green check over an empty result set is the exact optimistic-oracle lie the planner
-exists to design against. Earned the hard way: a sweep reported "38/38 ✓, no task missing AC"
-while its task list was empty, because the fields sat one level deeper than the code read.
 
 #### Completeness-Critic gate (MANDATORY — run it yourself, never wait to be asked)
 
@@ -579,13 +491,7 @@ found + closed` — so the human never has to ask "algo mais?".
 > completeness so the tool fires the check instead of the human's feel. Until then, the
 > six-lens sweep is a MANDATORY manual gate, reported every cycle.
 
-**Definition of Ready (the stop gate).** Beyond per-task AC, the backlog as a whole
-must pass DoR's **7 checks** (`has_requirements`, `has_acceptance_criteria`,
-`no_orphans`, `no_cycles`, `has_constraints`, `has_risks`, `prd_quality_score ≥ 60` —
-owned by `agf gate`; confirm the phase via `--help`). DoR green **+** AC present on
-every task with AC-score ≥ 60 = ready to stop. Unresolved Example-Map questions or
-unmapped Impact-Map deliverables block DoR — park them as `risk` nodes or
-loop back to DESIGN first.
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Completeness-Critic gate (MANDATORY — run it yourself, never wait to be asked)". Carregue sob demanda.
 
 ### Step 5.5 — Completeness critic (MANDATORY, tool-grounded — never hand over an uncriticised backlog)
 
@@ -595,14 +501,7 @@ never human-triggered**. If someone has to ask "did anything get left out?", the
 failed — their intuition is not a control. `gaps`, DoR and `check` score **the nodes that
 exist**; nothing scores **the node you never wrote**. This is that missing scorer.
 
-**The one rule that decides whether this works — every critique MUST cite external evidence.**
-The literature is blunt about the failure mode. Huang et al., _LLMs Cannot Self-Correct
-Reasoning Yet_ (ICLR 2024, arXiv:2310.01798): **intrinsic** self-correction — a model
-critiquing itself with no external signal — **degrades** the output through overcorrection;
-merely asking "are you sure?" measurably drops quality (the FlipFlop effect, arXiv:2311.08596).
-What works is Gou et al., **CRITIC** (ICLR 2024, arXiv:2305.11738): _tool-interactive_
-critiquing — verify against external tools, then amend — whose stated conclusion is "the
-crucial importance of external feedback".
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 5.5 — Completeness critic (MANDATORY, tool-grounded — never hand over an uncriticised backlog)". Carregue sob demanda.
 
 So: **a sweep is not a thought, it is a command.** Each finding below must name the tool
 output that produced it — a `grep` hit, a file you opened, a `node show`, a graph query. A
@@ -610,16 +509,6 @@ finding with no external evidence is hallucinated critique and must be discarded
 injected. A sweep that "looks fine on reflection" was not run. This is the same principle as
 golden rule 8 (enforcement = deterministic trigger, not an agent remembering), applied to
 critique itself: the critic must be grounded in something outside the model.
-
-**Answer each sweep from a FRESH read, not by re-reading your plan (Chain-of-Verification,
-factored — Dhuliawala et al., ACL 2024, arXiv:2309.11495).** CoVe's measured result is that
-verification questions answered by _re-reading the original draft_ just re-confirm it; the
-**factored** variant — answer each question independently, from a source that does not include
-your own reasoning — is what actually catches the error. Operationally: a sweep's evidence must
-come from a NEW `grep`/`node show`/`ls` against the repo or graph, never from the plan text you
-just wrote. "I described the flow correctly above" is the draft confirming itself; run the
-query again over the graph. Factored verification is why the loop earned three passes this
-cycle — each sweep re-read the world, not the plan.
 
 Run **all seven** before Step 6, every cycle, and report the result — including "swept,
 nothing found". Each sweep pairs a question with the tool that answers it:
@@ -639,6 +528,20 @@ Sweep 7 has a special case worth naming: **instruments lie by omission.** A ledg
 measured by your own instrument needs an AC proving the instrument **moves** (inject a fake
 cost → the counter must rise). Otherwise the metric proves only that it is unplugged.
 
+Sweep 5's blind-spot, earned the hard way: **a read-only happy path hides who owns the write.**
+When an epic explores, crawls, or drives a system it did not author, the generator plans the
+reading and never plans the _acting_ — because every example it imagined was a read. Nothing in
+the tree is malformed; the gates go green; and the first real run mutates or destroys state
+nobody authorized. Worse, any epic that _persists what worked_ (a pheromone map, a cached
+skill, a learned path) turns one successful destructive action into a reinforced one, repeated
+every run after. So: for any epic that acts on a system it does not own, ask who classifies the
+action **before** it executes, and make the unclassified case BLOCK rather than proceed —
+a permissive default on an unrecognized action is the failure mode, not the recognized
+destructive one. Pair it with sweep 5's other half: grep the graph's existing `constraint`
+nodes against your NEW tasks. A task that casually proposes a third-party library or a new
+surface can contradict a global constraint that has been in the graph for cycles; the constraint
+is invisible to the task's own gates, so only the critic catches it.
+
 Sweep 7's twin, earned the hard way: **evidence lies by provenance.** An oracle that keys on
 _absence_ of evidence (`data is None → inconclusive`) is structurally blind to _evidence from
 the wrong source_ — which is the likelier failure. The generator blind-spot: a target contract
@@ -656,22 +559,6 @@ Findings are not prose — each becomes a node (task · contract update · risk 
 explicitly recorded deferral. Then re-run `gaps` and re-sweep. **Report every finding to the
 human with its evidence**, so the critique is auditable rather than trusted.
 
-**Convergence — TWO consecutive empty sweeps, not one.** A single clean pass does not mean
-done: **closing a hole can open another** (a new node has its own arrows, contracts, and
-instruments to critique). So the stop condition is a sweep that finds nothing **run against
-the backlog the previous sweep already revised** — i.e. two clean passes back-to-back. Earned
-this session: round 1 added a timeout risk + an instrument-fidelity AC; round 2, sweeping the
-revised tree, found a fresh unowned seam (two `cobrar` tasks reading a shape no `contract`
-described); round 3 came back empty. Three passes, because each revision is new surface.
-
-**The stop signal is convergence, NOT an exhausted budget.** If session write-capacity remains
-after two clean sweeps, that is not a reason to keep injecting — manufacturing speculative
-nodes to fill capacity is over-production (Lean), the opposite of completeness. Spend any
-remaining budget on **depth** the sweeps already justified (a missing contract's exact
-`file:line` field sources, an ADR's rejected-alternative, a risk's mitigation-as-AC), never on
-inventing new scope the critic did not surface. Empty critic + required-clean = stop, regardless
-of budget left.
-
 ### Step 6 — Stop for the human ⇆ iterate (the loop)
 
 When the PRD is complete and DoR passes, **STOP and present it** for the **Three Amigos
@@ -679,32 +566,7 @@ sign-off** — the human (Product + Test) may interrupt, adjust scope, or approv
 approval, the next cycle re-enters Step 1, seeded by the freshly-updated project
 findings (continuous dogfood evolution).
 
-**Close by DECIDING the next step** (`_shared.md` rule 14 — decide, don't ask). The planner
-delivers backlog, not code, so it has no DELIVERY TABLE; instead recommend the SINGLE
-epic/task the builder should attack first, with the named principle: **`Próximo: run
-graph-builder-leafcutter começando por X — porque [fundamento]`** (e.g. "por E1 do
-walking-skeleton — porque ordem-de-dependência: todo o resto depende dele"; WSJF/Pareto
-also apply here). Alternatives as a one-line note, never an open question — except a
-genuinely owner-only call (scope / cost / risk), where you ask with your recommendation first.
-
-**Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you stop
-for the human, ask "what durable planning lesson from this cycle must the NEXT planner read
-_here_?" A recurring mis-scope, a wrong EXPAND-pointer pattern, a KR framing that misled the
-builder → **edit THIS skill** (command-agnostic), propagating to every synced destination
-(project `.agents/skills` ↔ global `~/.claude/skills`) and scanning secrets before any public
-push. Frame KRs as **prove OR disprove**: an A/B that comes back against the feature is a
-successful cycle, not a failure — the default-OFF lever is the safety. Transient facts (counts,
-versions) go to memory, never the skill.
-
-**Record WHY the hole existed, not just that it did (Reflexion — Shinn et al., NeurIPS 2023,
-arXiv:2303.11366).** Reflexion's result is that an agent improves across attempts only when it
-writes a _verbal reflection on the cause of the miss_ and the next attempt reads it — the fix
-alone doesn't transfer, the reason does. So when Step 5.5 catches a hole, the durable lesson is
-not "I added a timeout risk" (a transient fact → memory) but the **generator blind-spot that let
-it through** ("a live-measurement task looks complete without a timeout owner because the happy
-path never hangs") — that sentence, command-agnostic, is what belongs in THIS skill so the next
-generator never emits the blind spot again. The skill IS the persistent reflection buffer; each
-cycle's critic findings are its training signal.
+> **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 6 — Stop for the human ⇆ iterate (the loop)". Carregue sob demanda.
 
 ## Anti-Patterns
 
@@ -721,7 +583,13 @@ cycle's critic findings are its training signal.
   EXIST; none can see the epic you never wrote. A fully green tree with a missing stage is
   the normal way this fails.
 - Do NOT chase global `agf gaps` debt — filter to your own node ids; only your subtree
-  must be required-clean
+  must be required-clean. **But validate the filter before you believe a zero.** On a
+  saturated backlog the gap list is long and **`--limit` silently truncates it**, so your
+  subtree's gaps can sit past the cut and you report "0 gaps" for a tree that has 35. Two
+  cheap checks make the instrument trustworthy: raise the limit until the _total_ count
+  stops changing, and confirm at least one of your own node ids appears somewhere in the
+  raw list before filtering. A hand-rolled filter that returns 0 on the first try is a
+  suspect, not a result — earned the hard way, twice in one session
 - Do NOT add a `requirement`/NFR/`contract` node without wiring a task that `implements`
   it — that creates a phantom required gap
 - Do NOT `node rm` + re-add just to fix AC — `node update --ac "<c1>" "<c2>" …` REPLACES

@@ -201,53 +201,31 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
 
 > Prefira `agf exec chain "a; b; c"` a rodar `a`, `b`, `c` em linhas separadas: 1 ciclo de store, 1 envelope, menos tokens. Use `agf exec pipe` quando o passo seguinte precisa do `.data` do anterior. Funciona em `npm run dev` e contra o binário instalado (fix `665d0a91`: re-invoca via `execPath`+`execArgv`). O envelope externo do chain agora é `ok:false` se qualquer step falhar — mas a regra-mãe permanece: um `ok:true` cujo efeito você não verificou não é sucesso, confirme no grafo/disco.
 
+- **A live SURFACE does not prove a live CAPABILITY — grep the executor.** A command
+  can exist, have `--help`, be indexed by RAG and answer `ok:true` while being wired
+  to a hardcoded no-op (an executor whose `available()` returns `false` by
+  construction). Before you conclude a capability is merely unconfigured — and above
+  all before proposing SPEND or a live run to obtain evidence — grep the executor the
+  surface actually passes. Credentials present + provider selected + still
+  `delegated` = unwired code, not a missing key, and no amount of money fixes it.
+- **A metric a feature writes about ITSELF cannot authorize changing its default.**
+  When building any gate that flips a default automatically, ask who WROTE the number
+  that decides. A self-reported savings counter measures the local effect the feature
+  causes and is blind to the cost it provokes elsewhere — it is the feature grading
+  its own homework. Authority requires measuring BOTH arms over the SAME input.
+  Detail + the live counter-example: `references/field-lessons.md`.
 - **Most tasks are EXPAND-not-create.** In real loops the core module / table /
   lever usually already exists — find it and extend the owning module. Greenfield
   `agf scaffold <name>` is the exception, not the default. Recreating from scratch
   is the most common failure here (violates DRY + the golden rule).
-- **A task says "write a build script" but the logic belongs in the tested core.**
-  When a standalone script (a bundler `.mjs`, a CI helper) **cannot import the compiled
-  core** (bundled entrypoints, not per-module output), do NOT re-implement the logic
-  inside the script — that duplicates it AND leaves the tested core **dormant** (rule 9).
-  Put the pure logic in the core (DIP-injected I/O, unit-tested), expose it as a **CLI
-  command** that reuses it, and let the script/CI be a one-liner that calls the command.
-  A shipped command must also be **discoverable** — register it wherever the context/RAG
-  index derives from, or it stays invisible to the next agent even though it runs.
-- **`preflight` returns `duplicate-risk` matching the picked task ITSELF — that is
-  expected.** Only stop for an _other_ node match or a `wip-conflict` verdict.
-- **GOTCHA — `agf next` has NO epic/tag/session scope.** It picks 100% globally by
-  priority, then by smallest id (FIFO) among unblocked tasks. Priority ≠ recency: an
-  OLD task from another PRD with the same priority beats a freshly-planned one just by
-  having a lower id (by design, not a bug). So when your intent is to continue a
-  specific epic you (or the planner) just built, **do NOT accept the global pull
-  blindly** — check the returned id belongs to the target epic (`agf node show <id>`
-  → confirm `parentId`); if it doesn't, pull the epic's tasks manually by id
-  (`agf node status <targetTaskId> in_progress`) instead of `agf next`. A correct
-  backlog (right parentId/AC/depends_on) does NOT make `agf next` epic-aware — the
-  picker simply has no notion of "the epic I meant".
 - For a genuinely trivial task you may collapse this into `agf start` (next +
   context + in_progress), but never skip the `rg`/`search` reuse check.
 - Delegating? `agf brief <id>` emits the spec; close with `agf submit <id> --result <json>`.
-- **GOTCHA — Commander.js silently drops a subcommand's own flag when the parent
-  command defines the same flag name.** A parent `Command` and a `.addCommand()`-
-  attached subcommand both declaring e.g. `-d, --dir` causes Commander to silently
-  fall back to the parent's default, ignoring the value passed after the subcommand
-  name — no error, just wrong data flowing downstream. Reproduce it in isolation with
-  a throwaway `node -e` script before assuming the bug is elsewhere. Fix: add
-  `.enablePositionalOptions()` to the parent `Command` (options before the subcommand
-  name bind to the parent, options after bind to the subcommand). Found and fixed
-  twice in this codebase (`context-cmd.ts`, `loop-cmd.ts`) — check for it whenever a
-  new subcommand under an existing parent command misbehaves on a flag that "should"
-  work.
-- **GOTCHA — a lifecycle/process port taking a `pid: number` must guard `pid > 0`
-  before calling `process.kill`/`kill(pid, sig)`.** Unix `kill()` treats `pid === 0`
-  as "signal the entire process group" and negative pid as "signal a process group by
-  id" — never a single-process target. A registry that persists `pid` before the real
-  spawned pid is known (e.g. registering, then spawning) can silently write `0`,
-  turning a later `stop`/`kill` into a broadcast that can take down the caller's own
-  shell. Whenever you wire a stop/kill path for a background process: (1) persist the
-  pid only AFTER the real spawn resolves, never before, and (2) guard the kill call
-  itself with `if (pid > 0)` as defense in depth.
+
+> **Jurisprudência desta etapa** (casos reais, causa-raiz e o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 2 — Pull, then INVESTIGATE before you touch code (golden rule)". Carregue sob demanda.
+
+- **`preflight` returns `duplicate-risk` matching the picked task ITSELF — that is
+  expected.** Only stop for an _other_ node match or a `wip-conflict` verdict.
 
 ### Step 3 — BUILD with economy (TDD + Clean Code/SOLID)
 
@@ -257,20 +235,8 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
 - **TDD Red→Green→Refactor:** write the failing test from the AC's Given-When-Then →
   watch it fail → minimal code to pass → **refactor applying Clean Code + SOLID**
   (tests stay green). One assertion focus per test; positive + negative + edge cases.
-- **Outside-in when the task is a surface control (the planner slices this way).** Start
-  the RED test at the **consumer surface** the AC names — the screen/command/endpoint the
-  user operates — not at an inner class. Then drive **only inward as the failing surface
-  operation demands**: build the API, then the domain logic, then the store, each pulled by
-  the surface test still being red. This is Cockburn's walking skeleton + Freeman & Pryce's
-  outside-in TDD (GOOS): nothing inner exists that no outer test pulled into being — which
-  is exactly why it delivers with zero speculative backend. `done` for such a leaf = the
-  **control is wired and operable end-to-end** (clicks → real effect → rendered result) AND
-  the epic's OKR/KR moves — observed at the surface, never "the unit is green". A surface
-  task whose test only exercises an inner function (never the wired control) is the
-  optimistic-oracle lie — it goes green while the button does nothing.
-- Keep additive/opt-in (default OFF = byte-identical) so existing tests stay green
-  — this is how you get **zero regression** for free.
-- Output stays compressed (`--ai`, `--select`) to minimise tokens.
+
+> **Jurisprudência desta etapa** (casos reais, causa-raiz e o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 3 — BUILD with economy (TDD + Clean Code/SOLID)". Carregue sob demanda.
 
 ### Step 4 — Close out HONESTLY (self-review + gates + DoD)
 
@@ -293,67 +259,12 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
 
 **Gate reality (earned in real loops — read before fighting a red `done`):**
 
-- **The blast gate is BLIND to convention/isolation tests that read files via fs.** `test:blast`
-  follows the Vite import graph — a test that asserts over source files with `readFileSync`/`readdirSync`
-  (layer-isolation "src/X must not import ../cli", file-size sweeps, convention scanners) is never
-  "affected" by your edit and never runs. A green blast can therefore hide a layering regression your
-  new file just introduced. Whenever you CREATE a file in a layer-guarded dir (e.g. `src/swarming`),
-  explicitly run that layer's convention test alongside blast — earned when a fresh adapter imported
-  `../cli` and blast stayed green while the isolation test was red on the full suite.
-- **Anti-hallucination gate (`PHANTOM_TESTFILE`).** `agf done` now refuses a task whose declared
-  `testFiles` **or** `implementationFiles` do **not** exist on disk — a delivery no real code/test
-  backs. This is the AC ↔ code ↔ **physical test** triangulation (both axes) enforced on entry, and
-  it applies to ANY project agf drives (resolved against `--dir`). Fix it honestly: write the missing
-  file, or repoint a stale reference with `agf node update <id> --test-files|--implementation-files
-<real files…>` — never `--force` past it just to go green (that re-creates the hallucination).
-- `agf done` runs the **full** suite by default. A _pre-existing, unrelated_
-  failure will block it. Confirm it is not yours: `git stash -u` → rerun the
-  failing test → `git stash pop`. If it fails on clean `main`, it is pre-existing.
-  **In a SHARED tree (colony), never stash — it sweeps the other ant's dirty files
-  (rule 4).** Colony-safe proof: `git worktree add <tmp> origin/main` + symlink
-  `node_modules` → run the failing test there → `git worktree remove --force`.
-  A throwaway _verification_ worktree is fine (the rejection of worktree-per-ant
-  is about _working_ there); it proves pre-existence without touching the tree.
-  Then file the bug node and, for a push blocked only by that proven-foreign
-  failure, bypass the hook citing the proof — never bypass on an unproven red.
-- `agf done --test-cmd "npm run test:blast"` can fail with a **DB lock / code 1
-  when the changed set is wide** (done holds `graph.db` open while spawning the
-  gate) even though blast passes standalone. Workaround: run blast standalone for
-  real coverage (above), then give `done` a _targeted_ receipt:
-  `agf done --test-cmd "npx vitest run <changed-area test files>"`.
-- **Closing a `risk`/spec node whose mitigation you just built:** the task-DoD `done`
-  gate requires acceptance criteria, and a `risk` node has none — so `agf done` will
-  fail on `has_acceptance_criteria`. That is a node-shape mismatch, NOT a false pass:
-  the honest signal is your real gates (blast + `check` + `harness` green + the test
-  proving the behavior). Close it with the raw forward transition (`agf node status
-<id> done`), not `agf done`. Never invent AC just to satisfy the task gate.
-  The same applies to a **measurement/VALIDATE task whose deliverable is
-  ledger/db evidence, not source** (an A/B run, a benchmark): `agf done` will
-  refuse with NO_FILES_MODIFIED because nothing tracked changed — the honest
-  close is the raw transition backed by the recorded numbers (decision node +
-  green receipt tests), never a fake source edit to appease the gate.
-
-- Pre-existing failure, a bug you discovered, or a deferred integration →
-  `agf node add --type risk|task …` **before** `done`. Then complete your task on
-  the real gate. Never mark done on a false claim (anti-vibe-coding).
-
-Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
-`agf snapshot`), and LISTENING (DORA retro) into the close-out.
-
-**Close-out mechanics (the boring failures that eat a real loop — earned repeatedly):**
+> **Jurisprudência desta etapa** (casos reais, causa-raiz e o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 4 — Close out HONESTLY (self-review + gates + DoD)". Carregue sob demanda.
 
 - **`done` → commit, never the reverse.** `done` reads the working tree; commit first
   leaves it clean and `done` refuses with `NO_FILES_MODIFIED`. Sequence per task:
   edit → `agf done <id>` → commit → next. If you already committed, close via the raw
   forward transition with your gates green, don't fight it.
-- **`BLAST_RADIUS_EXCEEDED` from files you did NOT write in this task.** Two silent
-  sources fill the tree behind your back: (1) a **format-on-save / lint hook reformats a
-  file _after_ your commit** (a long line wrapped, an import re-sorted); (2) the **`done`
-  hooks regenerate marker-wrapped context files** (CLAUDE.md · AGENTS.md · `.cursor` ·
-  `.github/copilot-instructions.md` · generated command-surface). Neither is yours to
-  claim. Fix: `git stash push -- <foreign paths>` before the next `done`, pop after; sweep
-  them periodically in a separate `chore(docs)`/`style` commit. Do NOT `--force` past the
-  gate — that skips the tests too.
 - **In a shared tree (multiple ants), other ants' untracked files appear beside yours.**
   Commit with **explicit `git add <your files>`, never `git add -A`/`.`** — an untracked
   `genesis.ts` from another ant is not your delivery.
@@ -361,43 +272,10 @@ Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
   This repo enforces commitlint: subject lower-case (no Sentence-case), header ≤100 chars,
   body ≤100/line, `scope` from a fixed enum (`cli·core·graph·hooks·events·plugins·`
   `approval·tests·ci·docs`). Check the config once; a rejected commit costs a round-trip.
-- **A measured NEGATIVE result is a valid delivery — register it, never fake green.**
-  When an A/B or benchmark you built comes back _against_ the feature (it cost more, it
-  raised the defect rate), the honest close is a `decision` node + a `risk` node with the
-  numbers, and leaving the lever OFF — not rewriting the fixture or the threshold to make
-  it pass. The lever's default-OFF is the safety; the proof is the point, in either direction.
-- **A green RED is a lying fixture, not a passing test.** If your failing test never went
-  red for the right reason, the fixture is wrong. Three real traps: bag-of-words cosine can't
-  separate tokens that differ only by a number (`"módulo 3"` ≈ `"módulo 4"` → fixtures
-  differing only by an index collide and the test asserts economy that isn't there); a
-  text filter that only fires on one language (caveman: English hedges/fillers) shows no
-  delta on a Portuguese fixture; and a **fixture that seeds a shared key/namespace in a
-  different format than the real producer writes** (producer acquires `task:<id>`, the
-  consumer's test seeds bare `<id>` → unit green, real flow a silent no-op). When two
-  modules share a key format, either export ONE constant both use or write one
-  integration test that runs producer→consumer for real. Make the fixture exercise the
-  exact thing that differs.
-- **The OUTPUT layer can delete your feature silently — a generic-sounding payload key
-  gets stripped as noise and the unit tests never notice.** A CLI whose default mode
-  compresses envelopes usually carries a deny-list of "drill-down noise" keys removed at
-  ANY depth (`rationale`, `summary`, `reason`, `explanation`, `detail`, `notes`…). Ship a
-  command whose PRIMARY payload happens to use one of those names and the value is stripped
-  on the way out: core tests green, command "works", human sees nothing — dormant capability
-  with a passing suite. Two rules: (1) after wiring any new output, READ THE REAL COMMAND
-  OUTPUT in the default mode (not `--select`, which bypasses the trim) and grep for your key
-  — its absence is the bug; (2) these compressors ship a per-command **owned-keys exemption
-  table** for exactly this case — register your command's payload key there with a comment
-  saying why, and add BOTH regression assertions (survives for the owning command, still
-  stripped for a non-owner). Earned when `--explain`'s entire "why" payload shipped invisible.
-
-**Skill hardening (MANDATORY close-out — see `_shared.md` → Golden Rule 17):** before you
-hand back, ask "what durable lesson from this cycle must the NEXT builder read _here_?" A
-reproducible gotcha, a root-cause, a gate-reality, an architecture decision → **edit THIS
-skill** (command-agnostic: the why/how, never "run command X"), propagating to every synced
-destination (project `.agents/skills` ↔ global `~/.claude/skills` ↔ any distributed copy)
-and scanning for secrets before any public push. A transient fact (a count, a version, a
-current status) goes to memory/pheromone, not the skill. The skill is what the next ant
-reads to ACT — a lesson left only in memory does not harden the process.
+- **Counting a failure by CAUSE beats counting failures.** When a gate can reject for several
+  reasons — never ran, ran and broke, ran and could not conclude — a single "blocked" tally
+  hides the distinction the design exists to preserve, and the case that should alarm you
+  (nobody ever measured) looks the same as the case that is working as intended.
 
 ### Step 5 — Learn & reinforce (stigmergy)
 
@@ -472,6 +350,139 @@ unless a user explicitly does.
 RED): don't just trust it — `git stash -- <implementation-file>` to temporarily remove the
 wire, re-run the test to confirm it now fails for the right reason, then `git stash pop`.
 Proves the test is actually anchored to your change, not passing by coincidence.
+
+> **Orçamento desta skill:** o corpo tem teto medido (ver `src/tests/skill-size-budget.test.ts`).
+> Ao endurecer a skill com uma lição nova, pergunte se ela DECIDE COMPORTAMENTO em toda
+> invocação — se sim, entra aqui em uma ou duas linhas; se é jurisprudência (o caso, a causa-raiz,
+> o blind-spot), vai para `references/field-lessons.md` na seção da etapa. Anexar prosa ao corpo a
+> cada ciclo transforma a memória do processo num custo que todo agente paga em toda sessão.
+
+- **Abra antes de rotular — "parece artefato" é hipótese, não classificação.** Um registro com
+  cara de lixo (título genérico, descrição vazia, nome de seção) pode ser escopo vivo: classifiquei
+  o mesmo nó três vezes como resíduo de import e, ao abri-lo, era um PRD com oito épicos, cinco
+  ainda em backlog. Rotular sem abrir apaga trabalho real do radar, e o custo aparece meses depois
+  quando alguém procura o que sumiu.
+
+- **Leia um EXEMPLO da saída, não só a contagem — é onde o falso positivo aparece.** Um detector
+  novo que devolve "247 achados" parece funcionar; abrir o primeiro item revela se ele está
+  acusando quem seguiu o processo. Fiz isso e descobri que cruzava um eixo só (arquivos de
+  implementação) e ignorava o outro (arquivos de teste), então todo commit bem-comportado que
+  adicionava um teste declarado virava achado. Num detector de PROCESSO o falso positivo custa
+  mais que a omissão: uma lista que acusa inocentes é ignorada por inteiro, e aí ela não pega
+  nem os casos reais.
+
+- **Antes de qualquer heurística de casamento, grepe o ID do requisito no código.** Título, tema
+  e numeração são inferência; uma referência que o implementador deixou (`REQ-X-042`, o número do
+  ticket, o id do nó num comentário) é prova. Um `grep -rn "<id>" src/` custa segundos e encerra a
+  investigação — descobri três requisitos "pendentes" cujas guardas citavam o próprio id na linha
+  exata que os satisfazia. Só caia para casamento por conteúdo quando o grep vier vazio, e diga
+  que veio vazio.
+- **Uma métrica de dívida que para acima de zero pode estar CERTA — zero seria a mentira.**
+  Quando o resíduo é composto de casos cuja ausência é a verdade (critérios que ninguém
+  implementa, trabalho entregue fora do processo, artefatos de import), forçar o contador a zero
+  exige forjar vínculos ou apagar registros. Feche cada caso com a razão escrita e relate o piso
+  como resultado, não como pendência.
+
+- **Critério de release quase nunca se satisfaz implementando — e tratá-lo como feature faz você
+  procurar código que não existe.** "Atingir grade X", "manter os testes verdes", "encerrar os
+  épicos em voo", "custo documentado": cada um fecha por um método diferente — verificar o estado,
+  medir e publicar o reprodutor, promover um check já existente a bloqueante, ou construir o
+  cobrador que faltava. Identifique QUAL antes de abrir editor. E quando fechar um desses, escreva
+  os pontos cegos no próprio nó: um critério fechado em silêncio vira promessa maior do que a
+  entrega.
+
+- **"Está excluído" não é o mesmo que "alguém decidiu excluir" — cheque se o arquivo já existiu.**
+  Um caminho em `.gitignore`/`exclude` parece uma escolha a respeitar, mas `git log --diff-filter=A`
+  pode revelar que ele NUNCA foi rastreado: aí não houve decisão, houve ausência, e tratá-la como
+  vontade alheia é como uma lacuna vira permanente. Compare com os irmãos (os outros hooks, os
+  outros arquivos daquela pasta): quando os pares são versionados e só um não é, a anomalia é a
+  exclusão.
+- **Antes de tornar compartilhado um script que era local, confira que todo runner que ele invoca
+  existe num clone limpo.** Ferramenta instalada na SUA máquina (bun, uma CLI global, um binário
+  de PATH) passa despercebida enquanto o script é local e quebra o fluxo de todo mundo no momento
+  em que vira versionado. Normalize para o que os arquivos irmãos já usam e meça — a versão
+  portátil costuma custar o mesmo.
+
+- **Quando um relatório quebra o total por MÉTODO, o método é o dado — não o total.** Um ledger
+  que separa "medido" de "estimado" fez isso porque as linhas não são comparáveis; somar as
+  fatias e citar o total desfaz exatamente a distinção que alguém teve o trabalho de construir.
+  Antes de repetir um número agregado, olhe se ele vem rotulado e cite o rótulo junto — descobri
+  que 61% de uma "economia" que eu havia registrado era estimativa contra uma constante
+  escolhida, e o instrumento já dizia isso no envelope.
+
+- **Documente o REPRODUTOR, não a medição.** Um número gravado em página estática (economia,
+  cobertura, latência, contagem) começa correto e apodrece na semana seguinte, e quem o ler
+  depois não tem como saber se está velho. Escreva o comando que produz o número; se a ocasião
+  exigir o valor fixo (uma release, um relatório datado), publique-o COM a data e o comando ao
+  lado, para que qualquer leitor possa reconferir em vez de acreditar.
+- **Ledger vazio nem sempre é instrumento desligado — pode ser a arquitetura funcionando.** Antes
+  de tratar um zero como falha de medição, confirme o que o desenho prevê: num modelo onde outra
+  parte arca com o custo, custo zero É o resultado esperado e é a evidência que o requisito pede.
+  O erro simétrico (ler o zero como defeito) desperdiça um ciclo caçando um bug que não existe.
+
+- **Quando um envelope traz mais de um número com o mesmo nome, diga QUAL você está citando.**
+  Relatórios costumam misturar o score do objeto medido com o score do próprio relatório
+  (checks aprovados / total), e citar o errado inverte a conclusão: reportei uma qualidade como
+  "abaixo da meta" quando o valor real era grade A — o número que li era a taxa de aprovação do
+  gate. Antes de concluir a partir de um número, localize o campo exato que o produziu.
+- **Um check com limiar correto e severidade errada é exatamente "medido e não cobrado".** Gates
+  costumam separar `required` de `recommended`, e a decisão final olha só o primeiro — então um
+  critério pode existir, exibir o valor certo no envelope e nunca reprovar nada. Ao verificar se
+  um gate cobra algo, leia a SEVERIDADE do check e a regra que computa `ready`, não a presença do
+  check. E, para promover um check a required com segurança, meça primeiro: se ele já passa hoje,
+  a promoção é catraca; se não passa, você está bloqueando o time sem avisar.
+
+- **Um gate multi-comando sem `set -e` reporta só o ÚLTIMO — teste quebrando o do MEIO.** Hooks e
+  scripts que enfileiram verificações devolvem o exit code do último comando por padrão, então
+  tudo que vem antes vira decoração e ninguém percebe, porque o gate "roda" e "passa". A
+  sabotagem que revela isso é quebrar um comando intermediário; quebrar o último dá falso
+  conforto. Vale para qualquer cadeia: hook, script de CI, pipeline com etapas.
+- **Para ligar um gate sobre dívida existente, use CATRACA, não meta.** Quando o acervo já viola o
+  critério (N avisos, cobertura abaixo do alvo), exigir a limpeza antes de ligar significa não
+  ligar, e escolher um número redondo ou não morde ou bloqueia todo mundo. Fixe o limite na
+  medição ATUAL: o que existe passa, o que for NOVO reprova. E quando a catraca pegar você
+  mesmo, limpe o seu — afrouxá-la na primeira mordida é o mesmo que nunca tê-la posto.
+
+- **Mudar o TIPO de um registro é afirmar algo sobre o mundo — rode o cobrador antes.** Reclassificar
+  um requisito como `constraint` (ou uma task como `done`, ou um risco como `mitigado`) declara
+  que a regra vigora, e o esquema empresta autoridade a essa declaração. Execute o gate, o hook ou
+  o teste que supostamente a cobra e leia a saída: um tipo errado mente com mais força que um
+  registro aberto, porque um aberto ao menos parece pendente. Earned: eu ia converter quatro
+  requisitos em constraint e descobri que o hook cobrava metade do que eles exigiam.
+
+- **Toda métrica de dívida tem um PISO onde o que resta não é mais dívida do mesmo tipo.** Um
+  lote que cai rápido com um método (casar, wirar, arquivar) chega num resíduo cuja natureza é
+  outra: critérios de gate que nenhuma task "implementa", itens já triados cujo desfecho correto
+  é continuar abertos, artefatos de import. Insistir no método que funcionou até ali é como um
+  mutirão honesto vira uma pilha de vínculos forjados. Quando o delta parar de bater com a
+  intenção — ou quando você precisar argumentar para encaixar um item — pare, classifique o
+  resíduo por natureza e devolva o que exige decisão de dono.
+
+- **Procure o implementador no grafo INTEIRO, não só sob o mesmo pai.** Importadores de documento
+  agrupam nós pela seção em que o texto aparecia (Requisitos / Riscos / Restrições), não pela
+  relação real — então o épico de um requisito pode ter zero tasks enquanto as tasks que o
+  entregaram vivem sob outro container do mesmo PRD. "Não há candidato no épico" quase nunca
+  significa "ninguém implementou"; significa que a estrutura reflete o layout do documento
+  original. Busque por conteúdo em todo o grafo antes de concluir que é dívida.
+
+- **Case por CONTEÚDO, não por identificador — convenção de ID raramente é única.** Quando dois
+  conjuntos parecem se corresponder por numeração (REQ-3 ↔ Epic 3, ticket-12 ↔ branch-12), o
+  casamento por número produz pares errados com aparência de precisão, porque o mesmo número
+  costuma existir em mais de uma origem. Case pelo título/descrição normalizada e IMPRIMA os dois
+  lados antes de aplicar em lote; o número é dica de partida, nunca chave. Vi um script casar
+  "A/B Lever Config" com "Hexagonal Consolidation" e reportar sucesso.
+
+- **"Consertei e nada mudou" quase sempre significa que você editou o gêmeo.** Antes de duvidar
+  do conserto, confirme que o símbolo que você tocou é o que roda: `grep -n` do nome costuma
+  devolver duas definições no mesmo arquivo (uma legada, uma viva). O teste falhando E o efeito
+  real ausente, juntos, são a assinatura disso — um bug real deixaria pelo menos um dos dois se
+  mover.
+- **Quando N linhas de um relatório erram do mesmo jeito, suspeite da REGRA antes de corrigir as
+  linhas.** Um detector que classifica mal uma categoria inteira (um cabeçalho tratado como
+  folha, um agrupamento como item) gera dívida que nenhuma edição de dado resolve — e "limpar"
+  linha a linha costuma exigir apagar registro real. Conserte a classificação e verifique que as
+  folhas legítimas continuam sendo cobradas; remover a cobrança impossível não pode remover o
+  sinal.
 
 ## Anti-Patterns
 
@@ -654,60 +665,11 @@ task by task, routing each task's **complexity-caste → model-tier** (the small
 caste runs on the cheapest tier). Two invariants make this safe to wire back into the
 main loop:
 
-- **Opt-in that is byte-identical when absent.** The delegation is behind a flag that
-  **only short-circuits when the capability is detected** (a handshake with the
-  installed binary); with the binary absent — or the flag off — the current
-  delegated/live path is untouched. A flag that changes the default when its target
-  isn't present is not opt-in, it's a regression. Prove the deep-equal: absent-binary
-  output must match the no-flag output.
-- **Capability without a surface is dormant (rule 9), so the delegation IS the
-  surface.** Building the orchestrator and never wiring a way to reach it delivers
-  zero; the wire (a flag on the existing loop) is what turns it on.
+> **Jurisprudência desta etapa** (casos reais, causa-raiz e o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "The colony as a separate, installable orchestrator (delegate-first, opt-in)". Carregue sob demanda.
 
-**Proving the colony's value is the ATTRIBUTION, not the dollar cost.** Each task the
-colony closes records its tokens against that task's node in the ledger; the value
-proof (rule 16) is `tokens > 0 attributed per node` read back through the normal
-metrics surface — a real number, not a claim. In delegate-first mode a **zero dollar
-cost is CORRECT, not a bug** (the ledger prices real provider calls; there are none).
-Never fake a cost to "show value" — show the attribution.
-
-**Colony runtime (live + delegated):** the async colony path has shipped (B4, B5).
-`runColony()` executes tasks through the async provider adapter when a provider is
-connected (via `--swarm` or the colony binary's `run` command). When no provider is
-available, the colony returns the **delegated envelope** — proving zero-dollar cost
-is correct (the ledger records real calls; with none, attribution is empty).
-The sync execution port still exists for tests/stubs; the async path is the default
-for live runs.
-
-**Instrumenting the colony (the operator-facing "how to turn it on").** The section above
-is the _why_; this is the durable _how_, command-agnostic (the exact verbs always come
-from `agf help` / `agf retrieve-command`, never hardcoded here):
-
-- **It is a second binary in the SAME repo, not a separate package.** Building the repo
-  produces the colony bin alongside the main one; it becomes reachable to the opt-in flag
-  only once it is on the PATH (installed/linked) — that is precisely what the flag's
-  handshake probes before delegating. In-repo, drive it through the dev entrypoint
-  (dogfood), never a stale globally-installed bin.
-- **Providers are a single shared source with the main CLI — never wire them twice.** The
-  colony has NO provider config of its own; it reads the SAME project settings the main
-  `provider use` writes. So connecting a provider once (its env-var key present + selecting
-  it, e.g. OpenRouter) serves the main loop AND every ant: when that key is detected the
-  router prefers it and maps each complexity-caste → model-tier automatically. Duplicating
-  provider wiring for the colony would violate single-source (rule 5).
-- **Fallback is TWO-level, both delegate-first, both `$0`-ledger-correct:** (1) opt-in flag
-  set but the colony binary ABSENT → the main loop's existing delegated/live path runs
-  untouched (the byte-identical invariant above); (2) binary present but NO provider
-  connected → the colony returns the **delegated envelope** ("drive it with your own LLM"),
-  never a command pretending to run autonomously. Instrumentation is therefore purely
-  additive: turning the flag on can never regress the no-colony behavior, and a missing
-  provider degrades to delegation, not failure.
 - **Colony size is a parameter on the opt-in flag** — one ant = one worktree (the
   worktree-per-ant primitive above), all pointed at the same graph via the shared
   graph-root env. Sizing past ~3-5 is where worktree-per-ant (vs. same-tree) pays off.
-- **Nothing to pull is not a colony failure.** A perfectly-instrumented swarm still needs
-  `task`-type nodes in the backlog; a backlog that is all spec-artifacts (risk/epic/
-  requirement/…) leaves every ant idle. Verify pullable work exists (the picker returns a
-  task) BEFORE blaming the swarm wiring — instrumentation and fuel are separate concerns.
 
 ## Related
 
