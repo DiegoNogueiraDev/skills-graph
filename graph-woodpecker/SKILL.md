@@ -447,7 +447,7 @@ shows `test:node`/coverage) + Cross-cutting finding + Honesty + the decided next
 (`Next step: X — because [principle]`, e.g. risk-first = severity × blast radius). Obey
 that section verbatim — single source, do not re-improvise the format here.
 
-**Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you hand
+**Skill hardening (MANDATORY close-out — `_shared.md` → Close-out Report Format, item 6):** before you hand
 back, ask "what durable hardening lesson from this sweep must the NEXT woodpecker read
 _here_?" A reproducible root-cause class, a new deterministic audit signal, a false-green
 pattern → **edit THIS skill** (command-agnostic: the signal/why, never a hardcoded command

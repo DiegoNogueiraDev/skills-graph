@@ -617,7 +617,7 @@ freshly-updated project findings as its seed (continuous dogfood evolution).
   GOOS outside-in TDD) and inflates time-to-market for zero observable value
 - Do NOT frame a KR as an inner artifact ("the service exists", "the parser is done"). The
   KR is the **surface operating whole**, observed in the consumer's mode — a number, a
-  boolean, a rendered state (`_shared.md` Golden Rule 16). A control on the screen with no
+  boolean, a rendered state (`_shared.md` Golden Rule 6). A control on the screen with no
   leaf that proves it end-to-end = incomplete epic
 - Do NOT let a **measure→activate** pair measure only the flagship unit. When an epic
   gates activation on evidence (smart-defaults, auto-tuning, a router that flips a

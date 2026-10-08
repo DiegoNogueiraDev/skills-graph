@@ -101,6 +101,12 @@ Workflow below is the same loop for stronger models; this is the compiled versio
      tasks? Go back to step 1 (the loop feeds itself). **Only when harvest is ALSO
      dry** → STOP. Report to the user: "Backlog and harvest are both exhausted." Signal
      `graph-backlog-generation`.
+   - Driving the loop via `agf autopilot` instead of hand-rolling steps 1-9? Check
+     its `stopped` reason, not `agf next`'s `code` — different field, different
+     command. `stopped: 'wip_held'` means a task is ALREADY `in_progress` (its id
+     is in `heldTaskId`) — WIP=1 is enforced here, not advisory (BUG-043).
+     Finish or escalate that task first; autopilot will not silently grab a second
+     one.
 2. **Pick when many are ready (no math):** lowest-id `must`; no `must` → lowest-id
    `should`; tie → lowest id. Ignore the fitness formula unless you can compute it.
 3. `agf preflight "<task title>"` → verdict `wip-conflict`, or a match on **another**
