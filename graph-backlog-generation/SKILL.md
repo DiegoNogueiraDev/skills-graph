@@ -115,8 +115,9 @@ never code/git.** Top to bottom, obey every **STOP**/**DEFAULT**.
     - f. Could a KR go green **without** the value? (Then the KR is the defect.)
     - g. What is the laziest wrong implementation that still passes? (→ AC or `risk`.)
       Includes: does any metric prove its own instrument is plugged in?
-11. **STOP for the human:** "backlog ready, N tasks, critic swept with evidence (findings: …)
-    — run `graph-builder-leafcutter`."
+11. **STOP for the human.** Report in plain, short sentences: "The backlog is ready. It has
+    N tasks. The completeness critic swept the backlog with evidence (findings: …). Run
+    `graph-builder-leafcutter` next."
 
 **Never:** write/edit code, create/switch a git branch or commit, or inject a task whose
 AC has no concrete, checkable value.
@@ -126,7 +127,7 @@ AC has no concrete, checkable value.
 > The full universal set lives in `_shared.md` → **Golden Rules (universal
 > engineering)** — obey it verbatim; the list below is the planner-specific slice.
 > Each planning handoff MUST follow `_shared.md` → **Close-out Report Format**
-> (what was injected + proof + `Próximo: X — porque [fundamento]`).
+> (what was injected + proof + `Next step: X — because [principle]`).
 
 The project's golden rules, distilled for ANALYZE/DESIGN/PLAN. Non-negotiable:
 
@@ -445,8 +446,9 @@ and "the human noticed" is not a process (golden rule 8: the trigger must be the
 method, not someone remembering). So **before** you stop for the human, run these six
 lenses over the whole injected backlog yourself, out loud in the close-out. Each is a
 question that has caught a real missing node; a "no" answer is a node to add (or a
-`risk` to park). Report the sweep result — `Completeness sweep: 6 lenses, N holes
-found + closed` — so the human never has to ask "algo mais?".
+`risk` to park). Report the sweep result in one short line: `Completeness sweep: 6
+lenses, N holes found + closed`. This stops the human from having to ask "is there
+anything else?".
 
 1. **Value-chain walk — arrows AND seams.** Write the theme's end-to-end flow as an
    explicit chain and name the owner of every **arrow** (a stage) _and_ every **seam**
@@ -489,7 +491,7 @@ found + closed` — so the human never has to ask "algo mais?".
 > become `agf gaps` detectors (consumer-surface coverage, claim-staleness, missing-driver)
 > — the same medir→wirar→cobrar the project preaches, applied to the planner's OWN
 > completeness so the tool fires the check instead of the human's feel. Until then, the
-> six-lens sweep is a MANDATORY manual gate, reported every cycle.
+> six-lens sweep is a MANDATORY manual gate. Report it every cycle.
 
 > **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Completeness-Critic gate (MANDATORY — run it yourself, never wait to be asked)". Carregue sob demanda.
 
@@ -510,8 +512,8 @@ injected. A sweep that "looks fine on reflection" was not run. This is the same 
 golden rule 8 (enforcement = deterministic trigger, not an agent remembering), applied to
 critique itself: the critic must be grounded in something outside the model.
 
-Run **all seven** before Step 6, every cycle, and report the result — including "swept,
-nothing found". Each sweep pairs a question with the tool that answers it:
+Run **all seven** before Step 6, every cycle. Report the result every time, even when it is
+"swept, nothing found". Each sweep pairs a question with the tool that answers it:
 
 | #   | Sweep                      | The question                                                                                                                        | Grounded by                                                                                                                         |
 | --- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -557,14 +559,15 @@ validate/identity field, ask what loads successfully when you're in the wrong pl
 
 Findings are not prose — each becomes a node (task · contract update · risk · ADR) or an
 explicitly recorded deferral. Then re-run `gaps` and re-sweep. **Report every finding to the
-human with its evidence**, so the critique is auditable rather than trusted.
+human. State its evidence with it.** This makes the critique auditable. The human does not
+have to trust it on your word.
 
 ### Step 6 — Stop for the human ⇆ iterate (the loop)
 
-When the PRD is complete and DoR passes, **STOP and present it** for the **Three Amigos
-sign-off** — the human (Product + Test) may interrupt, adjust scope, or approve. On
-approval, the next cycle re-enters Step 1, seeded by the freshly-updated project
-findings (continuous dogfood evolution).
+When the PRD is complete and DoR passes: **stop. Present the PRD for the Three Amigos
+sign-off.** The human (Product + Test) may interrupt the loop, change the scope, or
+approve it. After approval, the next cycle starts at Step 1 again. It uses the
+freshly-updated project findings as its seed (continuous dogfood evolution).
 
 > **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 6 — Stop for the human ⇆ iterate (the loop)". Carregue sob demanda.
 
@@ -574,8 +577,8 @@ findings (continuous dogfood evolution).
   branch) — the deliverable is graph nodes; implementation + branch-per-feature is the
   builder's. If you opened an editor, you left the planner — revert and node-ify it.
 - Do NOT hand over a backlog whose completeness critic (Step 5.5) never ran. If the human has
-  to ask "did anything get left out?", the skill failed. Report the sweep every cycle — even
-  when it finds nothing.
+  to ask "did anything get left out?", the skill failed. Report the sweep every cycle. Report
+  it even when it finds nothing.
 - Do NOT critique by introspection — "let me re-read my plan and see if it's complete" is
   **intrinsic** self-correction, which measurably makes output WORSE (Huang et al. 2023);
   every sweep must cite a tool result (grep/file/graph), per CRITIC (Gou et al. 2023).

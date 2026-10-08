@@ -337,7 +337,7 @@ So any model honors the rules from the CLI alone — no reliance on memory:
 | 11 git on main                   | BUILD/HARDEN own git (branch→merge→push→delete); PLAN never touches git                                              |
 | 12 single loop                   | `agf brief`/`agf submit` (delegate in-loop, no swarm)                                                                |
 | 13 deterministic enforcement     | `agf check` · `agf gate <phase>` · `agf done` (PHANTOM_TESTFILE) · `agf lint-files` git gate                         |
-| 14 decide next step              | Close-out `Próximo: X — porque [fundamento]` (below)                                                                 |
+| 14 decide next step              | Close-out `Next step: X — because [principle]` (below)                                                               |
 
 ---
 
@@ -368,26 +368,31 @@ evidence base worth stating once:
 This is golden rule 8 (deterministic trigger, not an agent remembering) applied to the agent's
 own claims. Each pillar's skill body carries the domain-specific form; this is the shared root.
 
-Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying:
+Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying.
+
+Write this report in ASD-STE100 style (Simplified Technical English, adapted for agent
+reporting — not the certified aerospace manual): one fact or instruction per sentence,
+short sentences, active voice, present tense, and the same word for the same thing every
+time (always "task", never swap in "item" or "delivery" for it).
 
 ```markdown
-## Resumo do loop
+## Cycle Report
 
-**N tasks + M épicos promovidos** (grafo: X→Y done), tudo com TDD, blast verde e push na main:
+**<N> tasks and <M> epics moved to done** (graph: <X>→<Y> done). All tasks passed TDD. The test run is green. The agent pushed the code to main.
 
-| Entrega                 | O quê                                                   | Prova                        |
-| ----------------------- | ------------------------------------------------------- | ---------------------------- |
-| **<ID> <título curto>** | 1-2 frases do que mudou e POR QUÊ (o valor, não o diff) | <n> testes · `<commit-hash>` |
+| ID                      | Task                                                        | Proof                        |
+| ----------------------- | ------------------------------------------------------------ | ---------------------------- |
+| **<ID> <short title>**  | 1-2 sentences. State what changed. State why it matters.     | <n> tests · `<commit-hash>` |
 
-**Valor no produto:** para CADA entrega, 1 frase objetiva do ganho no TODO do produto — que capacidade end-to-end ela destrava, aproxima ou torna confiável, do ponto de vista de quem usa o produto, NÃO o que o código faz isolado. Diga o efeito no sistema inteiro ("o oráculo agora recusa falso-sucesso → qualquer verde do produto virou confiável"; "a bridge lê o dataset inteiro sem rolar → o diferencial vs Selenium está de pé"), nunca o mecanismo ("criei a função judge()"). Se uma entrega não move nada perceptível no produto, diga isso — é sinal de capacidade dormente (regra 9).
+**Product value:** For each task, write one sentence. State the end-to-end gain for the product — the capability it unlocks, moves closer, or makes reliable, from the point of view of the product's user. Do not describe what the code does in isolation. Describe the effect on the whole system. Example: "The oracle now rejects a false success. Every green result from the product is now reliable." Example: "The bridge reads the full data set without scrolling. The tool still beats Selenium on this point." If a task does not change anything visible in the product, say so. This is a sign of a dormant capability (see Golden Rule 9).
 
-**Progresso do backlog:** **X% concluído do backlog planejado** — com os números absolutos (`Y/Z tasks done`) e a fonte real, nunca estimado. Compute do grafo: tasks `done` ÷ total de tasks planejadas (`agf stats --select data.byStatus` para o corte por status; se precisar do total só de `task`, cruze com `agf query --type task`). Reporte o task-completion (não o node-count total, que infla com epic/contract/risk/KR). Uma frase de contexto ajuda ("as fundações E1–E5 fecharam; falta o pipeline E10 e a camada de adjudicação E13"), para o humano ver quanto do PLANO já virou realidade e o que falta.
+**Backlog progress:** State **<X>% of the planned backlog done**. State the real numbers (`<Y>/<Z> tasks done`). Use the graph as the only source. Do not estimate. Compute the percent from `agf stats --select data.byStatus`. If you need the task-only total, cross-check with `agf query --type task`. Report task completion, not the total node count — the total node count includes epics, contracts, risks, and key results, so it inflates the number. Add one sentence of context (example: "Foundations E1 through E5 are done. The E10 pipeline and the E13 adjudication layer remain.") so the human can see how much of the plan is now real, and what is left.
 
-**Achado transversal:** (se houver) o padrão/bug de classe descoberto que atravessa entregas — a informação que o humano não pediu mas precisa saber.
+**Cross-cutting finding:** (if any) State the pattern or class of bug you found across tasks — the information the human did not ask for but needs to know.
 
-**Honestidade:** assunções documentadas, nodes de risco criados (`node_xxx`), violações pré-existentes bypassed com justificativa.
+**Honesty:** List each assumption you made. List each risk node you created (`node_xxx`). List each pre-existing rule violation you bypassed, with your reason.
 
-**Próximo: <TASK> — porque [fundamento nomeado]** (ROI/maior-alavanca · Pareto 80/20 · TOC/gargalo · risco-primeiro · ordem-de-dependência · dado medido). Siga nele por padrão; alternativas só como nota curta, nunca como pergunta aberta.
+**Next step: <TASK> — because [named principle]** (ROI/highest-leverage · Pareto 80/20 · TOC/bottleneck · risk-first · dependency-order · measured data). Follow this task by default. State another option only as a short note, never as an open question.
 ```
 
 Rules of the format: **lead with the outcome**; every claim carries a physical proof (test count + commit hash); **every delivery states its product-level value (effect on the whole, not the mechanism) AND the batch reports % of the planned backlog done (real graph numbers, task-completion, never estimated)**; transversal findings get their own line; the next step is a DECISION with a named principle, not a menu of options. Exception: genuinely-the-human's calls (cost, scope, irreversible risk) — then ask, but with your recommendation first.

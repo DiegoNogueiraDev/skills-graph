@@ -89,9 +89,18 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    **No** → check `code` in response:
    - `NO_TASKS` + `hardBlocks[]` non-empty → skip blocked tasks (runtime missing); log
      each `requiredRuntime` and continue waiting — do NOT signal the planner as exhausted.
-   - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate:
-     output "blocked: backlog non-empty but nothing unblocked" and surface to user.
-   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: backlog-empty is the _trigger_, not the end. This is automatic — `agf autopilot` HARVESTS by default at NO_TASKS and re-pulls (generated WIRE-tasks re-feed the loop; stops only when harvest is also dry). Pass `--no-harvest` to opt out. To run it by hand: `agf migrate-ac --commit` (collapse AC-nodes into parents), close specs whose implementers are done, `agf risk triage` (surface/promote), `agf wire-dormant --ingest` (dormant capabilities → WIRE-tasks). Did harvest generate new tasks? → back to 1 (the loop self-feeds). **Only if harvest is ALSO dry** → STOP: output "backlog + harvest exhausted" and signal `graph-backlog-generation`.
+   - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate.
+     Report to the user: "Blocked. The backlog is not empty, but no task is unblocked."
+   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: an empty backlog is the
+     _trigger_ for harvest, not the end of the loop. This is automatic — `agf autopilot`
+     runs HARVEST by default at NO_TASKS and pulls again (new WIRE-tasks feed the loop
+     back; the loop stops only when harvest is also dry). Pass `--no-harvest` to opt out.
+     To run it by hand: `agf migrate-ac --commit` (collapse AC-nodes into parents), close
+     specs whose implementers are done, `agf risk triage` (surface/promote), `agf
+     wire-dormant --ingest` (dormant capabilities → WIRE-tasks). Did harvest create new
+     tasks? Go back to step 1 (the loop feeds itself). **Only when harvest is ALSO
+     dry** → STOP. Report to the user: "Backlog and harvest are both exhausted." Signal
+     `graph-backlog-generation`.
 2. **Pick when many are ready (no math):** lowest-id `must`; no `must` → lowest-id
    `should`; tie → lowest id. Ignore the fitness formula unless you can compute it.
 3. `agf preflight "<task title>"` → verdict `wip-conflict`, or a match on **another**
@@ -114,7 +123,12 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    and **STOP**. Green → continue.
 8. `agf check <id>` → a required check fails → fix it, or file a `risk` node, then retry.
 9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk …`,
-   then `agf done <id> --test-cmd "npx vitest run <your test file>"`.
+   then retry with **`--test-files <your test file>`** to scope the DETECTED runner down
+   to that file, and accept its verdict. Do **not** reach for `--test-cmd` on this path:
+   since BUG-076 (commit `fbc68a16`), `agf` rejects an agent-supplied `--test-cmd`
+   whenever a real runner is detectable (`TEST_CMD_OVERRIDE_DENIED`) — true for almost
+   every JS/TS repo. `--test-cmd` only runs when **no** runner is detectable, and even
+   then the result is untrusted evidence (`trusted:false`), which `--strict` mode refuses.
 10. `agf memory write pheromone-<slug>` (what worked **+ the gotcha**) → go to 1.
 
 **Close the node before you commit, one task at a time.** `agf done` reads the _working tree_:
@@ -135,7 +149,7 @@ false claim, or hold >1 task `in_progress`.
 > consumer's-mode, honesty nodes) lives in `_shared.md` → **Golden Rules (universal
 > engineering)** — obey it verbatim; the list below is the builder-specific slice.
 > The cycle handoff MUST follow `_shared.md` → **Close-out Report Format** (delivery
-> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
+> table + Cross-cutting finding + Honesty + `Next step: X — because [principle]`).
 
 The project's golden rules, distilled for IMPLEMENT. Non-negotiable:
 
@@ -289,10 +303,10 @@ iteration skips the diagnosis you already paid for); link related trails with
 Then loop to Step 1.
 
 **At a batch/cycle boundary (before handing back), render the handoff per `_shared.md` →
-Close-out Report Format** — the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim
-graph-backed: `N testes · <commit>`; blocked items get their own row citing the honesty
-node; epics show `test:node` promotion) + Achado transversal + Honestidade + the decided
-next step (`Próximo: X — porque [fundamento]`). Obey that section verbatim — it is the
+Close-out Report Format** — the DELIVERY TABLE (`ID | Task | Proof`, every claim
+graph-backed: `N tests · <commit>`; blocked items get their own row citing the honesty
+node; epics show `test:node` promotion) + Cross-cutting finding + Honesty + the decided
+next step (`Next step: X — because [principle]`). Obey that section verbatim — it is the
 single source; do not re-improvise the format here.
 
 ### Step 6 — Exhaustion → harvest → restart
@@ -546,6 +560,14 @@ semantics — see the hijack gotcha below.
 > id doesn't need to ride on `node status`. Prefer the env var (`export
 AGF_AGENT_ID=<you>`) so identity flows to every command that honors it and you
 > never hand `--agent` to one that doesn't.
+
+> **CAUTION — isolate `AGF_GRAPH_ROOT` per ant/worktree.** Each ant's shell must
+> point `AGF_GRAPH_ROOT` only at the graph it owns. A real incident (commit
+> `1af9dd22`) shows the cost of skipping this check: `AGF_GRAPH_ROOT` leaked into a
+> `vitest` run and corrupted the colony's shared `workflow-graph/graph.db` with
+> about 70 fixture projects. Five parallel ants each found the corruption on their
+> own. Before you spawn or join a colony, print `AGF_GRAPH_ROOT` and confirm it
+> names the one graph you mean to touch.
 
 ### Claim lifecycle
 

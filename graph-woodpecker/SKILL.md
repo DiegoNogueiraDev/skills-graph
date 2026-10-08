@@ -170,7 +170,7 @@ silent, mark done on a false claim, or hold >1 `in_progress`.
 > The full universal set lives in `_shared.md` → **Golden Rules (universal
 > engineering)** — obey it verbatim; the list below is the hardening-specific slice.
 > Sweep handoffs MUST follow `_shared.md` → **Close-out Report Format** (delivery
-> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
+> table + Cross-cutting finding + Honesty + `Next step: X — because [principle]`).
 
 1. **Find before you fix; reproduce before you trust.** A bug you cannot reproduce in a
    test is a hypothesis, not a defect. Differential debugging / bisection finds _when_;
@@ -441,10 +441,10 @@ the diagnosis you already paid for. `agf heal` clears graph noise. Then re-run S
 the loop ends only when a full sweep finds nothing required.
 
 **At a sweep boundary, render the handoff per `_shared.md` → Close-out Report Format** —
-the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim graph-backed: `N testes ·
+the DELIVERY TABLE (`ID | Task | Proof`, every claim graph-backed: `N tests ·
 <commit>`; a still-open finding gets its own row citing the `risk`/`bug` node; sweep row
-shows `test:node`/coverage) + Achado transversal + Honestidade + the decided next step
-(`Próximo: X — porque [fundamento]`, e.g. risco-primeiro = severity × blast radius). Obey
+shows `test:node`/coverage) + Cross-cutting finding + Honesty + the decided next step
+(`Next step: X — because [principle]`, e.g. risk-first = severity × blast radius). Obey
 that section verbatim — single source, do not re-improvise the format here.
 
 **Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you hand
