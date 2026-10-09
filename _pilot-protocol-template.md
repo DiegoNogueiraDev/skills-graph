@@ -8,7 +8,7 @@
 agf next                      # pull next unblocked task (WIP=1)
 agf brief <id>                # compact spec ≤ 500 tokens
 # → implement with TDD (Red→Green→Refactor)
-agf check <id>                # DoD validation (12 checks)
+agf check <id>                # DoD validation (see agf check --help)
 agf submit <id> --result '{"arquivos":["<file>"],"testes":{"passed":N,"failed":0},"desvios":[],"usage":{"tokens_in":N,"tokens_out":N,"model":"<model>"}}'
 ```
 

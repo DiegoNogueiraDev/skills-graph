@@ -89,24 +89,10 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    **No** → check `code` in response:
    - `NO_TASKS` + `hardBlocks[]` non-empty → skip blocked tasks (runtime missing); log
      each `requiredRuntime` and continue waiting — do NOT signal the planner as exhausted.
-   - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate.
-     Report to the user: "Blocked. The backlog is not empty, but no task is unblocked."
-   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: an empty backlog is the
-     _trigger_ for harvest, not the end of the loop. This is automatic — `agf autopilot`
-     runs HARVEST by default at NO_TASKS and pulls again (new WIRE-tasks feed the loop
-     back; the loop stops only when harvest is also dry). Pass `--no-harvest` to opt out.
-     To run it by hand: `agf migrate-ac --commit` (collapse AC-nodes into parents), close
-     specs whose implementers are done, `agf risk triage` (surface/promote), `agf
-     wire-dormant --ingest` (dormant capabilities → WIRE-tasks). Did harvest create new
-     tasks? Go back to step 1 (the loop feeds itself). **Only when harvest is ALSO
-     dry** → STOP. Report to the user: "Backlog and harvest are both exhausted." Signal
-     `graph-backlog-generation`.
-   - Driving the loop via `agf autopilot` instead of hand-rolling steps 1-9? Check
-     its `stopped` reason, not `agf next`'s `code` — different field, different
-     command. `stopped: 'wip_held'` means a task is ALREADY `in_progress` (its id
-     is in `heldTaskId`) — WIP=1 is enforced here, not advisory (BUG-043).
-     Finish or escalate that task first; autopilot will not silently grab a second
-     one.
+   - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate:
+     output "blocked: backlog non-empty but nothing unblocked" and surface to user.
+   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: backlog-empty é o _gatilho_ do harvest, não o fim do loop. É automático — `agf autopilot` roda HARVEST por padrão no NO_TASKS e puxa de novo (WIRE-tasks geradas realimentam o loop; ele só para quando o harvest também está seco). Passe `--no-harvest` para desligar. Para rodar à mão: `agf migrate-ac --commit` (colapsa AC-nodes nos pais), fechar specs cujos implementadores já terminaram, `agf risk triage` (surface/promote), `agf wire-dormant --ingest` (capacidades dormentes → WIRE-tasks). O harvest gerou tasks novas? → volte ao passo 1 (o loop se realimenta). **Só se o harvest TAMBÉM estiver seco** → STOP: informe "backlog + harvest esgotados" e sinalize `graph-backlog-generation`.
+   - Dirigindo o loop via `agf autopilot` em vez de rodar os passos 1-9 à mão? Confira o motivo `stopped`, não o `code` do `agf next` — campo diferente, comando diferente. `stopped: 'wip_held'` significa que uma task JÁ está `in_progress` (o id dela vem em `heldTaskId`) — WIP=1 é imposto aqui, não é conselho (BUG-043). Termine ou escale essa task antes; o autopilot não pega uma segunda em silêncio.
 2. **Pick when many are ready (no math):** lowest-id `must`; no `must` → lowest-id
    `should`; tie → lowest id. Ignore the fitness formula unless you can compute it.
 3. `agf preflight "<task title>"` → verdict `wip-conflict`, or a match on **another**
@@ -129,12 +115,12 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    and **STOP**. Green → continue.
 8. `agf check <id>` → a required check fails → fix it, or file a `risk` node, then retry.
 9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk …`,
-   then retry with **`--test-files <your test file>`** to scope the DETECTED runner down
-   to that file, and accept its verdict. Do **not** reach for `--test-cmd` on this path:
-   since BUG-076 (commit `fbc68a16`), `agf` rejects an agent-supplied `--test-cmd`
-   whenever a real runner is detectable (`TEST_CMD_OVERRIDE_DENIED`) — true for almost
-   every JS/TS repo. `--test-cmd` only runs when **no** runner is detectable, and even
-   then the result is untrusted evidence (`trusted:false`), which `--strict` mode refuses.
+   then retry com **`--test-files <your test file>`** para reduzir o runner DETECTADO a esse
+   arquivo, e aceite o veredito dele. **Não** use `--test-cmd` neste caminho: desde o BUG-076
+   (commit `fbc68a16`), o `agf` recusa um `--test-cmd` vindo do agente sempre que há um runner
+   detectável (`TEST_CMD_OVERRIDE_DENIED`) — verdadeiro para quase todo repo JS/TS. `--test-cmd`
+   só roda quando **nenhum** runner é detectável, e mesmo assim o resultado é evidência não
+   confiável (`trusted:false`), que o modo `--strict` recusa.
 10. `agf memory write pheromone-<slug>` (what worked **+ the gotcha**) → go to 1.
 
 **Close the node before you commit, one task at a time.** `agf done` reads the _working tree_:
@@ -155,7 +141,7 @@ false claim, or hold >1 task `in_progress`.
 > consumer's-mode, honesty nodes) lives in `_shared.md` → **Golden Rules (universal
 > engineering)** — obey it verbatim; the list below is the builder-specific slice.
 > The cycle handoff MUST follow `_shared.md` → **Close-out Report Format** (delivery
-> table + Cross-cutting finding + Honesty + `Next step: X — because [principle]`).
+> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
 
 The project's golden rules, distilled for IMPLEMENT. Non-negotiable:
 
@@ -309,10 +295,10 @@ iteration skips the diagnosis you already paid for); link related trails with
 Then loop to Step 1.
 
 **At a batch/cycle boundary (before handing back), render the handoff per `_shared.md` →
-Close-out Report Format** — the DELIVERY TABLE (`ID | Task | Proof`, every claim
-graph-backed: `N tests · <commit>`; blocked items get their own row citing the honesty
-node; epics show `test:node` promotion) + Cross-cutting finding + Honesty + the decided
-next step (`Next step: X — because [principle]`). Obey that section verbatim — it is the
+Close-out Report Format** — the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim
+graph-backed: `N testes · <commit>`; blocked items get their own row citing the honesty
+node; epics show `test:node` promotion) + Achado transversal + Honestidade + the decided
+next step (`Próximo: X — porque [fundamento]`). Obey that section verbatim — it is the
 single source; do not re-improvise the format here.
 
 ### Step 6 — Exhaustion → harvest → restart
@@ -540,164 +526,9 @@ governing rule is stigmergic: the environment (statuses, leases, working tree) t
 you what to do — **an occupied trail means divert to another task; never freeze the
 colony, never fight over the same node.**
 
-### Setup — identity is mandatory in a shared graph
-
-```bash
-# Ant A (terminal 1)
-export AGF_AGENT_ID=formiga-a
-
-# Ant B (terminal 2)
-export AGF_AGENT_ID=formiga-b
-```
-
-Alternatively, pass `--agent <id>` to `agf next` AND `agf done` (next claims, done
-releases — both sides need the id). Priority: `--agent` flag > `AGF_AGENT_ID` env
-var > auto-generated UUID. An ant operating WITHOUT identity gets single-agent
-semantics — see the hijack gotcha below.
-
-> **GOTCHA — `--agent` belongs ONLY on `next` and `done`; `agf node status` does
-> NOT accept it and silently no-ops the transition when you pass it.** Running
-> `agf node status <id> in_progress --agent <you>` returns a header but the status
-> stays `backlog` (the unknown flag is swallowed, the mutation dropped) — you don't
-> discover it until `agf done`/`check` fails the required `status_flow_valid` DoD
-> check ("deve passar por in_progress"). Transition WITHOUT the flag:
-> `agf node status <id> in_progress`. Ownership (`metadata.claimedBy`) is already
-> written by `agf next --agent <you>`, so the plain transition is colony-safe — the
-> id doesn't need to ride on `node status`. Prefer the env var (`export
-AGF_AGENT_ID=<you>`) so identity flows to every command that honors it and you
-> never hand `--agent` to one that doesn't.
-
-> **CAUTION — isolate `AGF_GRAPH_ROOT` per ant/worktree.** Each ant's shell must
-> point `AGF_GRAPH_ROOT` only at the graph it owns. A real incident (commit
-> `1af9dd22`) shows the cost of skipping this check: `AGF_GRAPH_ROOT` leaked into a
-> `vitest` run and corrupted the colony's shared `workflow-graph/graph.db` with
-> about 70 fixture projects. Five parallel ants each found the corruption on their
-> own. Before you spawn or join a colony, print `AGF_GRAPH_ROOT` and confirm it
-> names the one graph you mean to touch.
-
-### Claim lifecycle
-
-```
-agf next --agent formiga-a       # atomically claims a task; other ants skip it
-  → claim: { agentId, leaseToken, expiresAt }
-
-# … Ant A implements + TDD …
-
-agf done <id> --agent formiga-a  # marks done + releases the lease
-```
-
-If an ant crashes mid-task, the lease TTL (default **5 min** — verified
-`CLAIM_TTL_SECONDS = 300` in agent-claim-manager; the docs' old "30 min" was wrong)
-auto-expires and the task becomes claimable again. Re-running `agf next --agent
-<you>` re-claims/renews your own live task after a restart. Inspect live leases
-with `agf claims`.
-
-### Stigmergy rules (earned in real 2-ant sessions)
-
-1. **The durable trail marker is `in_progress` status, not the lease.** The lease
-   only guarantees pull-time atomicity; any real TDD task outlives 5 min. After it
-   expires, the other ant's only protection is the `in_progress` status — treat it
-   as pheromone: NEVER adopt a task in_progress that isn't yours, even when
-   `agf claims` is empty. Live-ant signals: blast-file mtimes seconds old, a second
-   agent process running, files appearing mid-investigation.
-2. **Ownership lives on the node (`metadata.claimedBy`), written at claim.** A task
-   in_progress owned by another ant is never handed out as `wip-idempotent` and is
-   surfaced as `FOREIGN_WIP` in the pull envelope; only a LEGACY in_progress node
-   with no owner still gets the old restart-recovery handoff — so identity remains
-   mandatory: an id-less ant writes no ownership and gets no protection.
-3. **Occupied trail ⇒ divert, don't stop.** Meeting the other ant mid-flight
-   (wip-conflict, foreign in_progress, files changing under you) is not an error:
-   leave that task alone, claim another with your id, keep the colony moving.
-   Reserve STOP for: nothing claimable AND harvest dry, or an unsafe tree (rule 4).
-4. **The shared working tree is coordinated by DECLARED FILE SCOPES — declare at
-   claim, always.** (Same-tree is the light mode for 2-3 ants; at 4+, use
-   worktree-per-ant — see **Scaling: worktree-per-ant** below. The old rejection
-   of worktrees — "the gitignored graph.db doesn't travel" — was solved by the
-   central graph root: every ant points at the SAME graph.) The declared boundary
-   (implementationFiles + testFiles) does double duty: other ants' pulls skip
-   candidates whose declared files overlap yours (even after your lease expires —
-   the in_progress+owner status protects), and their done-gate excuses your declared
-   dirty files instead of flagging them as scope creep. An UNDECLARED dirty file is
-   an orphan: it still blocks every other ant's done by design. Never escape with
-   `--force` (it skips tests); close (done + commit with explicit paths) promptly;
-   never `git checkout --`/revert dirty files you didn't author — at most report
-   them. If another ant's stash/pop sweeps the tree mid-run, a false RED or a
-   false NO_FILES_MODIFIED can appear — before diagnosing a revert, check the
-   file's mtime and grep for your symbol: stash-pop returns everything.
-   **Integrating a moved remote with foreign dirty files:** `git pull --rebase`
-   (and `--autostash`) refuses or stash-sweeps the other ant's files — use
-   `git fetch` + `git merge origin/main` instead: merge tolerates dirty files
-   that don't overlap the incoming diff (check with `git diff --name-only
-HEAD origin/main` first), so the colony's tree is never swept.
-5. **Support is free.** Your blast gate re-runs the other ant's affected tests: a
-   green blast re-validates their trail at zero cost; a red one on THEIR files is a
-   finding to deposit as a `risk` node — not a license to touch their code.
-6. **Deposit trails for the colony.** Close each task with a pheromone memory
-   naming the ant-protocol gotchas you hit, so the next ant skips the diagnosis
-   you already paid for.
-
-### Scaling: worktree-per-ant (4+ formigas)
-
-Same-tree interference (done-gate reading the whole tree, one git index, blast
-seeing foreign dirt, lint-staged auto-staging across ants) saturates useful
-parallelism at ~3-5 ants. Past that, give each ant its own git worktree while
-ALL ants share ONE central graph + memories:
-
-```bash
-agf ant spawn formiga-a     # cria <repo>-ants/formiga-a (branch ant/formiga-a),
-                            # symlinka node_modules e devolve os exports prontos
-cd <repo>-ants/formiga-a
-export AGF_AGENT_ID=formiga-a AGF_GRAPH_ROOT=<repo raiz>   # (do envelope do spawn)
-# … loop normal: next → TDD → done → commit na branch ant/formiga-a …
-# fim de ciclo: merge p/ main → push → agf ant rm formiga-a (branch preservada)
-```
-
-Rules that change in this mode: the done-gate and blast see only YOUR worktree
-(no foreign-dirt contortions); commits land on `ant/<id>` and merge to `main`
-at cycle end (golden rule: no orphan branches — merge and delete same-session);
-claims/leases/pheromones work unchanged because `AGF_GRAPH_ROOT` points every
-ant at the same `workflow-graph/`. What does NOT travel into a worktree is
-anything gitignored (node_modules — symlinked by spawn; local `.env`s — copy
-manually if the task needs them). Env hygiene: git exports `GIT_DIR`/`GIT_INDEX_FILE`
-inside hooks — any tool spawning `git` for ANOTHER repo/fixture must strip
-inherited `GIT_*` env or it will silently operate on the parent repo.
-
-### 2-ant runnable example
-
-```bash
-# Terminal 1
-export AGF_AGENT_ID=formiga-a
-agf next --agent formiga-a       # pulls task X, claims it
-
-# Terminal 2 (concurrently)
-export AGF_AGENT_ID=formiga-b
-agf next --agent formiga-b       # pulls task Y (X is locked), claims it
-
-# Both complete independently:
-agf done <X-id> --agent formiga-a
-agf done <Y-id> --agent formiga-b
-```
-
-### Override: --force
-
-`agf next --force` bypasses the per-agent WIP=1 guard and pulls a second task
-for the same agent, emitting a `WIP_OVERRIDE` warning. Use only in exceptional
-circumstances (e.g. the prior task is blocked and cannot be done yet).
-
-### The colony as a separate, installable orchestrator (delegate-first, opt-in)
-
-The colony can be driven by a **second, separately-installable binary** that lives
-in the SAME repo and reuses 100% of the core — never a rewrite. The point is
-optionality: a heavy frontier model plans the backlog; a **cheap model executes** it,
-task by task, routing each task's **complexity-caste → model-tier** (the smallest
-caste runs on the cheapest tier). Two invariants make this safe to wire back into the
-main loop:
-
-> **Jurisprudência desta etapa** (casos reais, causa-raiz e o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "The colony as a separate, installable orchestrator (delegate-first, opt-in)". Carregue sob demanda.
-
-- **Colony size is a parameter on the opt-in flag** — one ant = one worktree (the
-  worktree-per-ant primitive above), all pointed at the same graph via the shared
-  graph-root env. Sizing past ~3-5 is where worktree-per-ant (vs. same-tree) pays off.
+**Roles:** the leader follows **colony-leader**; each worker follows **colony-ant**.
+**Internals** (identity setup, claim lifecycle, stigmergy rules, worktree-per-ant from 4+
+ants, runnable 2-ant example, `--force`): [references/concurrency.md](references/concurrency.md).
 
 ## Related
 

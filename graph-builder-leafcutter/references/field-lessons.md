@@ -1118,7 +1118,7 @@ Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
   saying why, and add BOTH regression assertions (survives for the owning command, still
   stripped for a non-owner). Earned when `--explain`'s entire "why" payload shipped invisible.
 
-**Skill hardening (MANDATORY close-out — see `_shared.md` → Golden Rule 17):** before you
+**Skill hardening (MANDATORY close-out — see `_shared.md` → Close-out Report Format, item 6):** before you
 hand back, ask "what durable lesson from this cycle must the NEXT builder read _here_?" A
 reproducible gotcha, a root-cause, a gate-reality, an architecture decision → **edit THIS
 skill** (command-agnostic: the why/how, never "run command X"), propagating to every synced

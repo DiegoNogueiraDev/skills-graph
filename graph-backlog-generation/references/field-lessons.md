@@ -381,7 +381,7 @@ walking-skeleton — porque ordem-de-dependência: todo o resto depende dele"; W
 also apply here). Alternatives as a one-line note, never an open question — except a
 genuinely owner-only call (scope / cost / risk), where you ask with your recommendation first.
 
-**Skill hardening (MANDATORY close-out — `_shared.md` → Golden Rule 17):** before you stop
+**Skill hardening (MANDATORY close-out — `_shared.md` → Close-out Report Format, item 6):** before you stop
 for the human, ask "what durable planning lesson from this cycle must the NEXT planner read
 _here_?" A recurring mis-scope, a wrong EXPAND-pointer pattern, a KR framing that misled the
 builder → **edit THIS skill** (command-agnostic), propagating to every synced destination
@@ -422,7 +422,7 @@ cycle's critic findings are its training signal.
   → faster time-to-market; the app demos from the tip on day one instead of a backend that
   "compiles" for weeks behind a dead UI. Value, assertiveness, quality, speed — all from
   making the promised behaviour observable early, in the consumer's mode (`_shared.md`
-  Golden Rule 16).
+  Golden Rule 6).
 
 ## Falso negativo de busca vira premissa
 

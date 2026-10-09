@@ -102,7 +102,7 @@ agf next → agf context <id> → [TDD] → agf check <id> → agf node status <
 
 ## Definition of Done
 
-9 checks executados em `agf check <id>` (e em `agf done <id>`):
+Checks executados em `agf check <id>` (e em `agf done <id>`) — lista completa e severidades em `agf check --help` e na tabela gerada do catálogo:
 
 | #   | Check                     | Severidade   | O que verifica                                                                                                    |
 | --- | ------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -337,7 +337,27 @@ So any model honors the rules from the CLI alone — no reliance on memory:
 | 11 git on main                   | BUILD/HARDEN own git (branch→merge→push→delete); PLAN never touches git                                              |
 | 12 single loop                   | `agf brief`/`agf submit` (delegate in-loop, no swarm)                                                                |
 | 13 deterministic enforcement     | `agf check` · `agf gate <phase>` · `agf done` (PHANTOM_TESTFILE) · `agf lint-files` git gate                         |
-| 14 decide next step              | Close-out `Next step: X — because [principle]` (below)                                                               |
+| 14 decide next step              | Close-out `Próximo: X — porque [fundamento]` (below)                                                                 |
+
+---
+
+## Close-out Report Format
+
+Single source of the handoff every graph-\* pillar (PLAN · BUILD · HARDEN) renders at a cycle/batch/sweep boundary. Every claim is graph-backed — nothing the graph or the disk can't confirm.
+
+1. **Delivery table** — one row per delivered node:
+
+   | Delivery | What | Proof |
+   | -------- | ---- | ----- |
+   | `<node id>` — title | what changed, in one line | `N tests · commit <sha> · agf check ready` (or the consumer-mode receipt) |
+
+2. **Product value** — for EACH delivery, one sentence on the end-to-end gain for the whole product (the capability it unlocks, moves closer, or makes reliable), from the user's point of view — NOT what the code does in isolation. The observable delta in the consumer's mode (Golden Rule 6), with a number when one exists. If nothing visible changes, say so: it is a sign of a dormant capability.
+3. **Backlog progress** — **X% of the planned backlog done**, with the real numbers (`Y/Z tasks done`) from `agf stats --select data.byStatus` (done / in_progress / backlog / blocked, before → after). Task completion only, never estimated.
+4. **Cross-cutting finding** — the one pattern or bug class that spans the deliveries (a pattern, not a task list), plus the node it became. (If any.)
+5. **Assumptions and risks** — every assumption taken where the spec was silent (Golden Rule 2) and every loose end filed as a `risk`/`bug` node (Golden Rule 7), with ids.
+6. **Skill hardening** — the durable lesson the NEXT agent must read in the skill itself: edit the skill (command-agnostic) or say "none".
+7. **Next step: X — because [principle]** — the single chosen next step and the principle that chose it (WSJF, dependency order, TOC bottleneck…) — Golden Rule 14. Never an open "which one?".
+
 
 ---
 
@@ -368,31 +388,26 @@ evidence base worth stating once:
 This is golden rule 8 (deterministic trigger, not an agent remembering) applied to the agent's
 own claims. Each pillar's skill body carries the domain-specific form; this is the shared root.
 
-Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying.
-
-Write this report in ASD-STE100 style (Simplified Technical English, adapted for agent
-reporting — not the certified aerospace manual): one fact or instruction per sentence,
-short sentences, active voice, present tense, and the same word for the same thing every
-time (always "task", never swap in "item" or "delivery" for it).
+Every delivery cycle ends with this report to the human. It is how trust is built without them re-verifying:
 
 ```markdown
 ## Cycle Report
 
-**<N> tasks and <M> epics moved to done** (graph: <X>→<Y> done). All tasks passed TDD. The test run is green. The agent pushed the code to main.
+**N tasks + M epics moved to done** (graph: X→Y done). All tasks passed TDD, the blast gate is green, and the code is pushed to main.
 
-| ID                      | Task                                                        | Proof                        |
-| ----------------------- | ------------------------------------------------------------ | ---------------------------- |
-| **<ID> <short title>**  | 1-2 sentences. State what changed. State why it matters.     | <n> tests · `<commit-hash>` |
+| Delivery | What | Proof |
+| -------- | ---- | ----- |
+| **<ID> <short title>** | 1-2 sentences: what changed and WHY (the value, not the diff) | <n> tests · `<commit-hash>` |
 
-**Product value:** For each task, write one sentence. State the end-to-end gain for the product — the capability it unlocks, moves closer, or makes reliable, from the point of view of the product's user. Do not describe what the code does in isolation. Describe the effect on the whole system. Example: "The oracle now rejects a false success. Every green result from the product is now reliable." Example: "The bridge reads the full data set without scrolling. The tool still beats Selenium on this point." If a task does not change anything visible in the product, say so. This is a sign of a dormant capability (see Golden Rule 9).
+**Product value:** for each delivery, one sentence on the effect on the whole product, not the mechanism.
 
-**Backlog progress:** State **<X>% of the planned backlog done**. State the real numbers (`<Y>/<Z> tasks done`). Use the graph as the only source. Do not estimate. Compute the percent from `agf stats --select data.byStatus`. If you need the task-only total, cross-check with `agf query --type task`. Report task completion, not the total node count — the total node count includes epics, contracts, risks, and key results, so it inflates the number. Add one sentence of context (example: "Foundations E1 through E5 are done. The E10 pipeline and the E13 adjudication layer remain.") so the human can see how much of the plan is now real, and what is left.
+**Backlog progress:** **X% of the planned backlog done** (`Y/Z tasks done`), from the graph, never estimated.
 
-**Cross-cutting finding:** (if any) State the pattern or class of bug you found across tasks — the information the human did not ask for but needs to know.
+**Cross-cutting finding:** (if any) the pattern or bug class that spans deliveries.
 
-**Honesty:** List each assumption you made. List each risk node you created (`node_xxx`). List each pre-existing rule violation you bypassed, with your reason.
+**Honesty:** assumptions made, risk nodes created (`node_xxx`), pre-existing rule violations bypassed and why.
 
-**Next step: <TASK> — because [named principle]** (ROI/highest-leverage · Pareto 80/20 · TOC/bottleneck · risk-first · dependency-order · measured data). Follow this task by default. State another option only as a short note, never as an open question.
+**Next step: <TASK> — because [named principle]** (ROI · Pareto 80/20 · TOC/bottleneck · risk-first · dependency-order · measured data). Follow this task by default; alternatives only as a short note, never as an open question.
 ```
 
 Rules of the format: **lead with the outcome**; every claim carries a physical proof (test count + commit hash); **every delivery states its product-level value (effect on the whole, not the mechanism) AND the batch reports % of the planned backlog done (real graph numbers, task-completion, never estimated)**; transversal findings get their own line; the next step is a DECISION with a named principle, not a menu of options. Exception: genuinely-the-human's calls (cost, scope, irreversible risk) — then ask, but with your recommendation first.

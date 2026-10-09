@@ -170,7 +170,7 @@ silent, mark done on a false claim, or hold >1 `in_progress`.
 > The full universal set lives in `_shared.md` → **Golden Rules (universal
 > engineering)** — obey it verbatim; the list below is the hardening-specific slice.
 > Sweep handoffs MUST follow `_shared.md` → **Close-out Report Format** (delivery
-> table + Cross-cutting finding + Honesty + `Next step: X — because [principle]`).
+> table + Achado transversal + Honestidade + `Próximo: X — porque [fundamento]`).
 
 1. **Find before you fix; reproduce before you trust.** A bug you cannot reproduce in a
    test is a hypothesis, not a defect. Differential debugging / bisection finds _when_;
@@ -233,6 +233,19 @@ agf provenance   # untracked/unattributed changes (audit trail gaps)
 
 Multi-modal sweep — each lens is blind to the others: types (harness), behavior (gaps),
 style/security (lint), history (insights/hotspots). Triangulate; don't trust one.
+
+**Lentes de HARDEN** — cada uma tem um critério de quando usar e o passo a passo em
+`references/lenses/`. Abra só a que a task pede:
+
+| Lente | Quando usar | Arquivo |
+|-------|-------------|---------|
+| bugs | reproduzir e achar causa raiz de falha conhecida | [`references/lenses/bugs.md`](references/lenses/bugs.md) |
+| quality | dívida, complexidade, duplicação, violação de SOLID | [`references/lenses/quality.md`](references/lenses/quality.md) |
+| performance | latência, p95, custo de startup, N+1 | [`references/lenses/performance.md`](references/lenses/performance.md) |
+| dependency | pacote com CVE, licença, pacote obsoleto | [`references/lenses/dependency.md`](references/lenses/dependency.md) |
+| accessibility | a task muda UI interativa (dashboard, componente, form) | [`references/lenses/accessibility.md`](references/lenses/accessibility.md) |
+| api-design | muda o envelope do CLI, flags, rotas ou schemas de entrada | [`references/lenses/api-design.md`](references/lenses/api-design.md) |
+| harness | fechar gate de qualidade, deploy, ou órfãos do `agf harness --dormant` | [`references/lenses/harness.md`](references/lenses/harness.md) |
 
 **Economy-integrity lenses (deterministic signals the economy pillars added — HARDEN must
 consume them, they are not just dashboards).** As the token-economy machinery ships, its own
@@ -441,10 +454,10 @@ the diagnosis you already paid for. `agf heal` clears graph noise. Then re-run S
 the loop ends only when a full sweep finds nothing required.
 
 **At a sweep boundary, render the handoff per `_shared.md` → Close-out Report Format** —
-the DELIVERY TABLE (`ID | Task | Proof`, every claim graph-backed: `N tests ·
+the DELIVERY TABLE (`Entrega | O quê | Prova`, every claim graph-backed: `N testes ·
 <commit>`; a still-open finding gets its own row citing the `risk`/`bug` node; sweep row
-shows `test:node`/coverage) + Cross-cutting finding + Honesty + the decided next step
-(`Next step: X — because [principle]`, e.g. risk-first = severity × blast radius). Obey
+shows `test:node`/coverage) + Achado transversal + Honestidade + the decided next step
+(`Próximo: X — porque [fundamento]`, e.g. risco-primeiro = severity × blast radius). Obey
 that section verbatim — single source, do not re-improvise the format here.
 
 **Skill hardening (MANDATORY close-out — `_shared.md` → Close-out Report Format, item 6):** before you hand
@@ -488,6 +501,7 @@ See `_shared.md` → **Token Economy** for the full arsenal: gateway auto-levers
 - `graph-backlog-generation` — PLAN: produces the backlog (the what-to-build).
 - `graph-builder-leafcutter` — BUILD: implements new features from the backlog.
 - `graph-woodpecker` — HARDEN (this): finds & fixes flaws in what already exists.
+- `colony-leader` / `colony-ant` — several sessions on one graph: the leader assigns and merges, each ant runs this skill on its task.
 - Knowledge bases (load on demand): `effective-debugging`, `klein-bug-hunters-diary`,
   `fowler-refactoring`, `khorikov-unit-testing`, `whittaker-google-testing`,
   `gregg-systems-performance`.

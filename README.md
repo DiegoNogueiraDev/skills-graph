@@ -43,9 +43,19 @@ As três skills abaixo são a destilação desse ciclo em linguagem que qualquer
 | [`graph-builder-leafcutter`](graph-builder-leafcutter/SKILL.md) | 🐜 **BUILD** | Existe uma task desbloqueada — **implementa o backlog ponta a ponta** com TDD, autônomo e contínuo (WIP=1, pull, não push), até esgotar o backlog. |
 | [`graph-woodpecker`](graph-woodpecker/SKILL.md) | 🪶 **HARDEN** | O código funciona mas precisa **endurecer** — caça bugs, vulnerabilidades (OWASP/STRIDE), dívida técnica e pontos cegos de observabilidade, provando cada correção com teste de regressão (→ ≥80% cobertura). |
 
+### Colônia: vários agentes no mesmo grafo (2 skills de papel)
+
+Quando várias sessões de agente trabalham juntas, cada uma abre **uma** skill de papel, e ela aponta
+para os 3 pilares acima em cada passo, sem repeti-los.
+
+| Skill | Papel | Quando usar |
+|-------|-------|-------------|
+| [`colony-leader`](colony-leader/SKILL.md) | 👑 **LEADER** | Você conduz a colônia: atribui tasks (`agf assign`), revisa o relatório de cada formiga, mergeia, faz push e entrega ao humano o status da rodada (`agf colony report`). |
+| [`colony-ant`](colony-ant/SKILL.md) | 🐜 **FORMIGA** | Você é uma sessão trabalhadora: recebe ou puxa uma task (`agf next --agent`), faz o TDD no próprio worktree, prova como usuário, commita na sua branch e reporta ao leader. |
+
 ### Protocolos compartilhados (shareds)
 
-- [`_shared.md`](_shared.md) — regras de ouro, economia de tokens, perfis e anti-padrões (referenciado pelas 3 skills).
+- [`_shared.md`](_shared.md) — regras de ouro, economia de tokens, perfis e anti-padrões (referenciado por todas as skills).
 - [`_pilot-protocol.md`](_pilot-protocol.md) · [`_pilot-protocol-template.md`](_pilot-protocol-template.md) — protocolo de delegação condutor ↔ executor.
 - [`_rag-protocol.md`](_rag-protocol.md) — recuperação de comandos sob demanda (intenção em linguagem natural → comando exato).
 
