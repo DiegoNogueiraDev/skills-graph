@@ -13,8 +13,8 @@ date: 2026-10-09
 
 # colony-ant — one task, end to end, then report
 
-You are one of N worker sessions on one shared graph. A leader assigns work,
-merges branches, and talks to the human. You own one task at a time, from
+You are one of N worker sessions on one shared graph. A leader assigns work and
+talks to the human; a reviewer merges branches. You own one task at a time, from
 `in_progress` to a commit with proof.
 
 Every step names the **command** and the **skill that owns the detail**. Open
@@ -28,11 +28,11 @@ export AGF_GRAPH_ROOT=<repo-root>        # the shared graph lives in the main ch
 cd <repo>-ants/<your-ant-id>             # your own worktree (agf ant spawn)
 ```
 
-What you may do with git is written by the human in the project `CLAUDE.md`
-(typical: commit only on your own `ant/*` branch; never push, merge into `main`,
-or tag). If your session refuses a command that the `CLAUDE.md` allows, **stop and
-tell the leader** — do not work around it, and do not ask the leader to run it for
-you. Only the human can unblock your session.
+What you may do with git is in the colony constitution, not repeated here:
+`agf constitution --show colony-constitution` (bundle `colony-constitution`).
+If your session refuses a command that the constitution allows, **stop and tell the
+leader** — do not work around it, and do not ask the leader to run it for you. Only
+the human can unblock your session.
 
 ## The cycle
 
@@ -50,7 +50,13 @@ you. Only the human can unblock your session.
 ### 1–2 — Get and claim
 
 - `agf next --agent <you>` hands you your assigned task first and never another
-  agent's. Mark it `in_progress` at once.
+  agent's. Mark it `in_progress` at once — after your parent commit exists (the
+  base is recorded then).
+- Opening rules (one branch per task from `origin/main`, merge not fast-forward,
+  declare only your files, no `--force`): read them from `agf ant spawn <id>` →
+  `data.rules`. Source: colony-constitution (`ant-rule-1` … `ant-rule-5`). Not repeated here.
+- Who to escalate to (ant → leader → CTO → human): the matrix in colony-constitution
+  (`colony-escalation`). Not repeated here.
 - Stop and ask the leader before you start when: `next` returns `NO_TASKS`; the
   task is a parent whose children are open; the task is assigned to someone else;
   or it touches a file another ant has in flight (`agf claims --colony`).
@@ -82,7 +88,12 @@ path (exit 1, a refusal, a deny), prove that path too.
 - One commit per task, title ≤ 100 characters, on your own `ant/*` branch.
 - Then `git merge origin/main` into your branch when the leader asks for it.
 
-### 8 — Report to the leader
+### 8 — Report
+
+The report is the graph. Put the fields below in the JSON of
+`agf submit <id> --result '…'`, then leave the leader a notice with the node id and
+`branch@sha` (`agf colony notice leader-agf "…"`) so it shows on their next `agf next`.
+Send a session message only when you are blocked and cannot wait for the next round.
 
 ```
 <node id> (<title>) done.
@@ -106,7 +117,8 @@ the leader can check without opening your code.
 
 ## Related skills
 
-- **colony-leader** — the other half: assignment, merge, push, and the human report.
+- **colony-leader** — the other half: assignment, worktree removal, and the human report.
+  The reviewer merges.
 - **graph-builder-leafcutter** — BUILD: the TDD cycle, DoD, and the concurrency
   internals (claims, leases, worktrees).
 - **graph-woodpecker** — HARDEN: when your task is a bug hunt, security, or coverage.

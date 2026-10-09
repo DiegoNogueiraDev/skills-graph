@@ -72,7 +72,7 @@ fails the later `done` DoD on the AC-quality/testable-AC checks, forcing a mid-c
 detour to backfill AC. (A `risk`/spec node is the opposite — it has no AC and closes
 via the raw forward transition; see Step 4.)
 
-The builder **owns git** (the planner never touches it): branch-per-implementation →
+In solo mode the builder is the git owner (the planner never touches it): branch-per-implementation →
 TDD → merge to `main` → commit/push → delete the branch. The graph says _what_; you
 decide _how_, prove it with tests, and ship it. This is the exact complement of the
 planner, which produces only graph nodes + plan text and touches neither code nor git
@@ -166,7 +166,7 @@ scan (stats·harness·gaps) → next (WIP=1) → INVESTIGATE (preflight·rg·sea
   → learn (pheromone) → select next by fitness (ACO + GA) → repeat until exhausted → restart
 ```
 
-WIP = 1 at all times (Little's Law: CT = WIP/TH). The **HOW to implement excellently**
+WIP = 1 per owner (Little's Law: CT = WIP/TH). The **HOW to implement excellently**
 (Clean Code · SOLID · DRY/KISS/YAGNI · TDD · XP · docs · logging), the **code-reuse
 decision tree**, and the **practice→gate map** live in
 [references/engineering-practices.md](references/engineering-practices.md); the ACO/GA +

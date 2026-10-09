@@ -61,8 +61,8 @@ When this skill is invoked you may **never fix a flaw silently**. The order is f
 **FIND → file a `bug`/`risk` node → reproduce with a FAILING test → fix → prove green.**
 No regression test that first reproduces the defect = you have not fixed it, you have
 guessed. No node for the flaw = it never existed and you cannot claim it `done`
-(anti-vibe-coding). You **own git** (branch-per-fix → TDD → merge → commit → delete) and
-you **never lower a bar to pass** — if a gate is red, fix the code or file a node, never
+(anti-vibe-coding). On solo mode, git is yours (branch-per-fix → TDD → merge → commit → delete); in a
+colony it follows `colony-git`. In both you **never lower a bar to pass** — if a gate is red, fix the code or file a node, never
 weaken the test, the lint rule, or the coverage threshold. Observability is part of the
 fix, not a follow-up: a failure path with no log/metric is not done.
 

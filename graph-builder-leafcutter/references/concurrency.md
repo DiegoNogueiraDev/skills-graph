@@ -73,8 +73,8 @@ with `agf claims`.
    leave that task alone, claim another with your id, keep the colony moving.
    Reserve STOP for: nothing claimable AND harvest dry, or an unsafe tree (rule 4).
 4. **The shared working tree is coordinated by DECLARED FILE SCOPES — declare at
-   claim, always.** (Same-tree is the light mode for 2-3 ants; at 4+, use
-   worktree-per-ant — see **Scaling: worktree-per-ant** below. The old rejection
+   claim, always.** (Colony rule: one worktree per ant at every size — see
+   **Scaling: worktree-per-ant** below. The old rejection
    of worktrees — "the gitignored graph.db doesn't travel" — was solved by the
    central graph root: every ant points at the SAME graph.) The declared boundary
    (implementationFiles + testFiles) does double duty: other ants' pulls skip
@@ -103,7 +103,7 @@ HEAD origin/main` first), so the colony's tree is never swept.
 
 Same-tree interference (done-gate reading the whole tree, one git index, blast
 seeing foreign dirt, lint-staged auto-staging across ants) saturates useful
-parallelism at ~3-5 ants. Past that, give each ant its own git worktree while
+parallelism at ~3-5 ants. Past that, give each ant its own worktree while
 ALL ants share ONE central graph + memories:
 
 ```bash
@@ -112,12 +112,12 @@ agf ant spawn formiga-a     # cria <repo>-ants/formiga-a (branch ant/formiga-a),
 cd <repo>-ants/formiga-a
 export AGF_AGENT_ID=formiga-a AGF_GRAPH_ROOT=<repo raiz>   # (do envelope do spawn)
 # … loop normal: next → TDD → done → commit na branch ant/formiga-a …
-# fim de ciclo: merge p/ main → push → agf ant rm formiga-a (branch preservada)
+# fim de ciclo: formiga NÃO mergeia nem dá push — avisa o leader com branch@sha (constituição: colony-git)
 ```
 
 Rules that change in this mode: the done-gate and blast see only YOUR worktree
-(no foreign-dirt contortions); commits land on `ant/<id>` and merge to `main`
-at cycle end (golden rule: no orphan branches — merge and delete same-session);
+(no foreign-dirt contortions); commits land on `ant/<id>` (one per task); the ant
+never merges to `main` or pushes — the leader merges and pushes `ant/*` (constitution `colony-git`);
 claims/leases/pheromones work unchanged because `AGF_GRAPH_ROOT` points every
 ant at the same `workflow-graph/`. What does NOT travel into a worktree is
 anything gitignored (node_modules — symlinked by spawn; local `.env`s — copy

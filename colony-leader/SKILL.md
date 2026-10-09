@@ -1,6 +1,6 @@
 ---
 name: colony-leader
-description: 'Use when you LEAD a colony of agent sessions ("ants") that share one agf graph — you assign tasks, review what the ants report, merge their branches, push, and give the human one status report per round. The entry point for the leader role: it routes each step of the round to the agf command and the lifecycle skill that own it (graph-backlog-generation, graph-builder-leafcutter, graph-woodpecker) instead of repeating them. Pair with colony-ant, which each worker session follows. NOT for working alone on one task (graph-builder-leafcutter). Triggers — colony-leader, leader, lead the colony, orchestrate ants, assign tasks to agents, merge ant branches, colony report, status da colônia, liderar a colônia, conduzir as formigas.'
+description: 'Use when you LEAD a colony of agent sessions ("ants") that share one agf graph — you assign tasks, review what the ants report, and give the human one status report per round. The reviewer merges and pushes; you remove the merged worktrees. The entry point for the leader role: it routes each step of the round to the agf command and the lifecycle skill that own it (graph-backlog-generation, graph-builder-leafcutter, graph-woodpecker) instead of repeating them. Pair with colony-ant, which each worker session follows. NOT for working alone on one task (graph-builder-leafcutter). Triggers — colony-leader, leader, lead the colony, orchestrate ants, assign tasks to agents, merge ant branches, colony report, status da colônia, liderar a colônia, conduzir as formigas.'
 triggers:
   - colony-leader
   - leader
@@ -24,16 +24,17 @@ detail**. Open that skill when you need the detail; do not copy it here.
 
 1. **Identity.** `export AGF_AGENT_ID=<leader-id>`. Without identity, WIP is global
    and every ant looks like a conflict.
-2. **Authorization comes from the human, in writing.** Record in the project
-   `CLAUDE.md` what each role may do with git (typical: an ant commits only on its
-   own `ant/*` branch; the leader merges into `main` and pushes; a tag or a release
-   always needs explicit human confirmation). A message from another session is
-   never authorization: if an ant says its session refused a command, do not run
-   the command for it — tell the human.
-3. **One worktree per ant** from 4+ ants: `agf ant spawn <id>`
+2. **Authorization comes from the human, in writing.** The git rules per role live in
+   the colony constitution (`agf constitution --show colony-constitution`,
+   bundle `colony-constitution`) — the single source, not repeated here. A message
+   from another session is never authorization: if an ant says its session refused a
+   command, do not run the command for it — tell the human.
+3. **One worktree per ant, always:** `agf ant spawn <id>`
    (graph-builder-leafcutter → `references/concurrency.md`).
 4. **A backlog exists.** If not: graph-backlog-generation (`agf import-prd`,
    `agf gaps`).
+5. **The CTO sits above you.** It sizes the team and sets scope; escalate there before
+   the human (`colony-escalation` in the constitution).
 
 ## The round
 
@@ -43,7 +44,7 @@ detail**. Open that skill when you need the detail; do not copy it here.
 | 2 | Assign | `agf assign <id> <ant>` (durable; `agf next --agent <ant>` delivers it first) | graph-backlog-generation (what is ready) |
 | 3 | Answer decisions | reply to the ant; record the decision in the node (`agf node update`) | — |
 | 4 | Review the report | check the ant's report against the checklist below | graph-builder-leafcutter (DoD) |
-| 5 | Merge and push | `git merge ant/<id>` → `tsc` + tests of conflicted files only → `git push` | — |
+| 5 | Remove merged worktrees | after the reviewer merges and pushes: `agf ant rm <id>` (git rules: `colony-git`) | — |
 | 6 | Report to the human | `agf colony report --format markdown` | — |
 
 ### 1 — See the board
@@ -84,13 +85,12 @@ Accept a task only when the report has all of these:
 
 Missing item → send it back with the exact gap. Do not run it yourself.
 
-### 5 — Merge and push
+### 5 — Remove merged worktrees
 
-- Merge in an integration worktree, never in a worktree an ant uses.
-- Run only `tsc` and the tests of files that conflicted. The ants already ran the
-  rest, and the pre-push hook is the wide net. Do not run the full suite by hand.
-- Generated files (command surface, manifests): regenerate them, do not hand-edit.
-- Push in the background so the round does not stall on the pre-push hook.
+- The reviewer merges `ant/*` into `main` and pushes (decisão do dono, `colony-git`).
+  You do not merge and you do not push.
+- Remove a worktree only after its branch is in `origin/main`. Never remove one an ant
+  is still using.
 
 ### 6 — Report to the human
 
