@@ -44,3 +44,7 @@ justifica (tasks prontas sem dono, overlaps, WIP parado). Uma proposta por vez.
 
 As alavancas compartilhadas (`--select`, `agf retrieve-command`, saída de shell comprimida)
 vivem em [`../_shared.md`](../_shared.md).
+
+## Frentes
+
+A colônia trabalha em 7 frentes fixas e cada sessão puxa só da sua: `agf next --agent <você> --scope frente-<x>`. Lista, donos e quem mergeia: colony-constitution (`colony-fronts`). Não repetido aqui.

@@ -124,3 +124,7 @@ and never run an ant's tests again — that is the leader's largest token sink.
 - **graph-builder-leafcutter** — BUILD: the per-task TDD cycle and the concurrency
   internals (claims, leases, worktrees).
 - **graph-woodpecker** — HARDEN: when the round's goal is bugs, security, or coverage.
+
+## Fronts
+
+The colony works in 7 fixed fronts and each session pulls only from its own: `agf next --agent <you> --scope frente-<x>`. The list, owners and merge routing: colony-constitution (`colony-fronts`). Not repeated here.

@@ -38,7 +38,7 @@ the human can unblock your session.
 
 | #   | Step                 | Command                                                            | Owner skill              |
 | --- | -------------------- | ------------------------------------------------------------------ | ------------------------ |
-| 1   | Get the task         | `agf next --agent <you>` (your assigned task comes first)          | —                        |
+| 1   | Get the task         | `agf next --agent <you> --scope frente-<x>` (assigned task first)  | —                        |
 | 2   | Claim it             | `agf node status <id> in_progress`                                 | —                        |
 | 3   | Check for duplicates | `agf preflight "<topic>"` · `agf context <id>`                     | graph-builder-leafcutter |
 | 4   | Build with TDD       | red → green → refactor                                             | graph-builder-leafcutter |
@@ -49,7 +49,7 @@ the human can unblock your session.
 
 ### 1–2 — Get and claim
 
-- `agf next --agent <you>` hands you your assigned task first and never another
+- `agf next --agent <you> --scope frente-<x>` hands you your assigned task first and never another
   agent's. Mark it `in_progress` at once — after your parent commit exists (the
   base is recorded then).
 - Opening rules (one branch per task from `origin/main`, merge not fast-forward,
@@ -123,3 +123,7 @@ the leader can check without opening your code.
   internals (claims, leases, worktrees).
 - **graph-woodpecker** — HARDEN: when your task is a bug hunt, security, or coverage.
 - **graph-backlog-generation** — PLAN: when the leader asks you to split or write tasks.
+
+## Fronts
+
+The colony works in 7 fixed fronts and each session pulls only from its own: `agf next --agent <you> --scope frente-<x>`. The list, owners and merge routing: colony-constitution (`colony-fronts`). Not repeated here.

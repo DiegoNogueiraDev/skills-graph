@@ -43,3 +43,7 @@ agf constitution --show colony-constitution   # bundle colony-constitution
 
 As alavancas compartilhadas (`--select`, `agf retrieve-command`, saída de shell comprimida)
 vivem em [`../_shared.md`](../_shared.md).
+
+## Fronts
+
+The colony works in 7 fixed fronts and each session pulls only from its own: `agf next --agent <you> --scope frente-<x>`. The list, owners and merge routing: colony-constitution (`colony-fronts`). Not repeated here.
