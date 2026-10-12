@@ -35,14 +35,14 @@ audit those checks do not cover.
 Each major version behind is months of unpatched CVEs and API drift. Score each production
 dependency with `npm outdated --json`:
 
-| State                      | Score | Security implication                   |
-| -------------------------- | ----- | -------------------------------------- |
-| Latest installed           | 100   | Baseline                               |
-| 1 minor behind             | 80    | Short CVE exposure window              |
-| 2 or more minor behind     | 60    | Moderate unpatched surface             |
-| 1 major behind             | 50    | About 6 to 12 months of CVE lag        |
-| 2 or more major behind     | 20    | Over a year unpatched, likely breaking |
-| No release in 12+ months   | 0     | Unmaintained: supply chain risk        |
+| State                    | Score | Security implication                   |
+| ------------------------ | ----- | -------------------------------------- |
+| Latest installed         | 100   | Baseline                               |
+| 1 minor behind           | 80    | Short CVE exposure window              |
+| 2 or more minor behind   | 60    | Moderate unpatched surface             |
+| 1 major behind           | 50    | About 6 to 12 months of CVE lag        |
+| 2 or more major behind   | 20    | Over a year unpatched, likely breaking |
+| No release in 12+ months | 0     | Unmaintained: supply chain risk        |
 
 Average the scores. The bottom 10 are the priority update targets.
 

@@ -1,6 +1,6 @@
 ---
 name: scrum-master
-description: 'Use when the colony needs its rhythm run, not its work done — a 30-min standup from the graph, sprint status and the next round. Routes to agf commands and to the colony-constitution rules; it never restates them. Triggers — scrum-master, standup, sprint, rodada, status da colônia.'
+description: 'Use when the colony needs its rhythm run, not its work done — a 30-min standup from the graph, sprint status and the next round. Routes to `agf` commands and to the colony-constitution rules; it never restates them. Triggers — scrum-master, standup, sprint, rodada, status da colônia.'
 triggers:
   - scrum-master
   - standup

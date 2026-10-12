@@ -20,7 +20,7 @@ semantics — see the hijack gotcha below.
 
 > **GOTCHA — `--agent` belongs ONLY on `next` and `done`; `agf node status` does
 > NOT accept it and silently no-ops the transition when you pass it.** Running
-> `agf node status <id> in_progress --agent <you>` returns a header but the status
+> `agf node status <id> in_progress` returns a header but the status
 > stays `backlog` (the unknown flag is swallowed, the mutation dropped) — you don't
 > discover it until `agf done`/`check` fails the required `status_flow_valid` DoD
 > check ("deve passar por in_progress"). Transition WITHOUT the flag:
@@ -130,6 +130,7 @@ inherited `GIT_*` env or it will silently operate on the parent repo.
 Running a leader with worker sessions: the leader follows the **colony-leader**
 skill and each worker follows **colony-ant** (roles, git authorization, consumer
 proof, report format). This section keeps only the claim/lease internals.
+
 ## 2-ant runnable example
 
 ```bash

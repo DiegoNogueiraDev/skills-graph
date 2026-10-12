@@ -8,11 +8,11 @@ FIX steps still apply. This file adds only what they do not say.
 
 ### LSP diagnostics, by priority
 
-| Tier | Level        | Action                              |
-| ---- | ------------ | ----------------------------------- |
-| 1    | error        | Block: fix before anything else     |
-| 2    | warning      | Schedule in the current sprint      |
-| 3    | hint / info  | Track; batch with low-severity bugs |
+| Tier | Level       | Action                              |
+| ---- | ----------- | ----------------------------------- |
+| 1    | error       | Block: fix before anything else     |
+| 2    | warning     | Schedule in the current sprint      |
+| 3    | hint / info | Track; batch with low-severity bugs |
 
 Files with 3 or more errors are high-attention targets. Files with 5 or more warnings and
 no errors are smell targets. Collect the full list with `npx tsc --noEmit`. For symbol-level
@@ -62,23 +62,23 @@ agf query --type bug --status done --limit 20 --select data.nodes
 
 ## Confidence tiers: what becomes a node
 
-| Tier | Label    | Criteria                                                       | Action                                  |
-| ---- | -------- | -------------------------------------------------------------- | --------------------------------------- |
-| A    | Definite | Reproducible crash, type error, empty catch with evidence      | File as a Critical/High node            |
-| B    | Probable | Pattern plus hotspot overlap, or more than 3 LSP errors in file | File as Medium; confirm before fixing  |
-| C    | Possible | Pattern only, no hotspot or LSP signal                         | Log in the report; no node              |
+| Tier | Label    | Criteria                                                        | Action                                |
+| ---- | -------- | --------------------------------------------------------------- | ------------------------------------- |
+| A    | Definite | Reproducible crash, type error, empty catch with evidence       | File as a Critical/High node          |
+| B    | Probable | Pattern plus hotspot overlap, or more than 3 LSP errors in file | File as Medium; confirm before fixing |
+| C    | Possible | Pattern only, no hotspot or LSP signal                          | Log in the report; no node            |
 
 Promote C to B only when two independent sources agree (pattern plus git history, or pattern
 plus LSP warning). Never file nodes for Tier C alone: they inflate the count without signal.
 
 ## Severity
 
-| Severity | Criteria                                    | Action                    |
-| -------- | ------------------------------------------- | ------------------------- |
-| Critical | Security hole, data loss, Tier A            | Fix now                   |
-| High     | Wrong behaviour, logic error                | Fix this sprint           |
-| Medium   | Smell, Tier B                               | Next sprint               |
-| Low      | Style, Tier C, TODO/FIXME                   | Track and batch           |
+| Severity | Criteria                         | Action          |
+| -------- | -------------------------------- | --------------- |
+| Critical | Security hole, data loss, Tier A | Fix now         |
+| High     | Wrong behaviour, logic error     | Fix this sprint |
+| Medium   | Smell, Tier B                    | Next sprint     |
+| Low      | Style, Tier C, TODO/FIXME        | Track and batch |
 
 Create a node for each Critical, High and confirmed Medium bug:
 
@@ -103,14 +103,14 @@ Risks the hunt surfaced but did not confirm drain later through `agf risk triage
   and `agf check <bug_node_id>`.
 - **Regression test by bug category.**
 
-| Bug category                                   | Test to add                                  |
-| ---------------------------------------------- | -------------------------------------------- |
-| Logic error (wrong condition, off-by-one)      | Unit test with boundary inputs               |
-| Timing / async (race, stale state)             | Integration test with a concurrent run       |
-| Configuration / environment                    | Smoke test over config variations            |
-| Data shape (null, missing field, wrong type)   | Unit test with null, empty and malformed inputs |
-| Integration contract (API or schema drift)     | Contract test against the real contract      |
-| UI state (wrong render, stale prop)            | Component test over the interaction sequence |
+| Bug category                                 | Test to add                                     |
+| -------------------------------------------- | ----------------------------------------------- |
+| Logic error (wrong condition, off-by-one)    | Unit test with boundary inputs                  |
+| Timing / async (race, stale state)           | Integration test with a concurrent run          |
+| Configuration / environment                  | Smoke test over config variations               |
+| Data shape (null, missing field, wrong type) | Unit test with null, empty and malformed inputs |
+| Integration contract (API or schema drift)   | Contract test against the real contract         |
+| UI state (wrong render, stale prop)          | Component test over the interaction sequence    |
 
 - **Minimal diff.** One bug, one fix, one commit. No refactor inside the fix commit.
 - **Prevention.** `agf memory write pheromone-fix-<slug>` with the root cause, the fix, and the

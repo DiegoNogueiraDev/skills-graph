@@ -7,16 +7,16 @@ judge, and the moves for paying the debt they find.
 
 ## Smell thresholds
 
-| Smell               | Threshold                                        | Severity | Priority        |
-| ------------------- | ------------------------------------------------ | -------- | --------------- |
-| Long function       | more than 50 lines                               | High     | fix now         |
-| Deep nesting        | more than 3 levels                               | High     | fix now         |
-| God class or file   | more than 300 lines                              | High     | fix now         |
-| Dead code           | unused exports, unreachable branches             | Medium   | fix now         |
-| Feature envy        | method uses another class's data more than its own | Medium | this sprint     |
-| Data clumps         | same parameter group in 3 or more functions      | Medium   | this sprint     |
-| Commented-out code  | code blocks inside comments                      | Low      | this sprint     |
-| Primitive obsession | primitives where a domain type belongs           | Low      | defer           |
+| Smell               | Threshold                                          | Severity | Priority    |
+| ------------------- | -------------------------------------------------- | -------- | ----------- |
+| Long function       | more than 50 lines                                 | High     | fix now     |
+| Deep nesting        | more than 3 levels                                 | High     | fix now     |
+| God class or file   | more than 300 lines                                | High     | fix now     |
+| Dead code           | unused exports, unreachable branches               | Medium   | fix now     |
+| Feature envy        | method uses another class's data more than its own | Medium   | this sprint |
+| Data clumps         | same parameter group in 3 or more functions        | Medium   | this sprint |
+| Commented-out code  | code blocks inside comments                        | Low      | this sprint |
+| Primitive obsession | primitives where a domain type belongs             | Low      | defer       |
 
 A "fix now" smell written in the current session must be resolved before the quality report.
 
@@ -25,11 +25,11 @@ A "fix now" smell written in the current session must be resolved before the qua
 Count decision points per function: `if`, `else if`, `case`, `while`, `for`, `&&`, `||`,
 `catch`, `?:`.
 
-| Decision points | Rating    | Action               |
-| --------------- | --------- | -------------------- |
-| 1 to 5          | Low       | None                 |
-| 6 to 10         | Moderate  | Monitor              |
-| 11 to 20        | High      | Simplify             |
+| Decision points | Rating    | Action                 |
+| --------------- | --------- | ---------------------- |
+| 1 to 5          | Low       | None                   |
+| 6 to 10         | Moderate  | Monitor                |
+| 11 to 20        | High      | Simplify               |
 | More than 20    | Very high | Decompose before merge |
 
 Size ceilings are enforced by `agf lint-files`: 800 lines per file, exit 1 on violation.
@@ -37,13 +37,13 @@ Functions stay at 50 lines or fewer.
 
 ## SOLID check (per modified module)
 
-| Principle                     | Question to ask                                                  |
-| ----------------------------- | ---------------------------------------------------------------- |
-| S: single responsibility      | One reason to change? Flag more than one.                        |
-| O: open/closed                | Does a switch or if-chain grow with each new type?               |
-| L: Liskov substitution        | Do implementations throw errors the base type does not?          |
-| I: interface segregation      | Interfaces with more than 7 methods, or unused implementations?  |
-| D: dependency inversion       | Direct instantiation where injection fits?                       |
+| Principle                | Question to ask                                                 |
+| ------------------------ | --------------------------------------------------------------- |
+| S: single responsibility | One reason to change? Flag more than one.                       |
+| O: open/closed           | Does a switch or if-chain grow with each new type?              |
+| L: Liskov substitution   | Do implementations throw errors the base type does not?         |
+| I: interface segregation | Interfaces with more than 7 methods, or unused implementations? |
+| D: dependency inversion  | Direct instantiation where injection fits?                      |
 
 ## DRY and conventions
 

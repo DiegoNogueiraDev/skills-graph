@@ -80,7 +80,7 @@ aperta (node_891dff815566).
 - **Anti-hallucination gate (`PHANTOM_TESTFILE`).** `agf done` now refuses a task whose declared
   `testFiles` **or** `implementationFiles` do **not** exist on disk — a delivery no real code/test
   backs. This is the AC ↔ code ↔ **physical test** triangulation (both axes) enforced on entry, and
-  it applies to ANY project agf drives (resolved against `--dir`). Fix it honestly: write the missing
+  it applies to ANY project `agf` drives (resolved against `--dir`). Fix it honestly: write the missing
   file, or repoint a stale reference with `agf node update <id> --test-files|--implementation-files
 <real files…>` — never `--force` past it just to go green (that re-creates the hallucination).
 - `agf done` runs the **full** suite by default. A _pre-existing, unrelated_

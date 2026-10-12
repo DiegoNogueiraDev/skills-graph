@@ -1,9 +1,9 @@
-# agf capability atlas — full functional coverage
+# `agf` capability atlas — full functional coverage
 
 Load on demand. This maps **every functional area of `agf`** (the ~110 top-level
 commands / 260+ with subcommands) to _when_ the loop reaches for it and the _entry_
 command. It is a capability map, not a flag reference — names are illustrative
-pointers; the **live source of truth is always `agf help`, `agf --help`, and
+pointers; the **live source of truth is always `agf help`, and
 `agf retrieve-command "<intent>"`**. Every command takes `--help`, `--select <path>`,
 and (where it lists) `--json` for token economy.
 
@@ -29,25 +29,25 @@ and (where it lists) `--json` for token economy.
 
 ### 2. DESIGN — governance, decisions, interfaces
 
-| Need                                                        | Command                                                    |
-| ----------------------------------------------------------- | ---------------------------------------------------------- |
-| Governing principles (indexed, gate-checked)                | `agf constitution` · `agf principles`                      |
-| Architecture Decision Records                               | `agf adr create\|list`                                     |
-| Generate/validate a spec by template                        | `agf spec --generate <tpl>` · `agf spec --validate <file>` |
-| Living specs linked to nodes                                | `agf spec-sync register\|list\|status\|link`               |
-| Workflow preset (default/strict-tdd/agile-light/enterprise) | `agf preset --apply <name>`                                |
-| Config profiles                                             | `agf profile`                                              |
-| Add design nodes/edges (ADRs, interfaces)                   | `agf node add` · `agf edge add`                            |
+| Need                                                        | Command                                                                                      |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Governing principles (indexed, gate-checked)                | `agf constitution` · `agf principles`                                                        |
+| Architecture Decision Records                               | `agf adr create`, `agf adr list`                                                             |
+| Generate/validate a spec by template                        | `agf spec --generate <tpl>` · `agf spec --validate <file>`                                   |
+| Living specs linked to nodes                                | `agf spec-sync register`, `agf spec-sync list`, `agf spec-sync status`, `agf spec-sync link` |
+| Workflow preset (default/strict-tdd/agile-light/enterprise) | `agf preset --apply <name>`                                                                  |
+| Config profiles                                             | `agf profile`                                                                                |
+| Add design nodes/edges (ADRs, interfaces)                   | `agf node add` · `agf edge add`                                                              |
 
 ### 3. PLAN — decompose into atomic, testable tasks
 
-| Need                                      | Command                               |
-| ----------------------------------------- | ------------------------------------- |
-| Decompose a task into subtasks (≤2h each) | `agf decompose <id>`                  |
-| Reusable decomposition templates          | `agf template list\|apply`            |
-| Completeness gaps + driver-agnostic fixes | `agf gaps --severity required --json` |
-| Board view: status, WIP, flow metrics     | `agf kanban`                          |
-| Query/search the backlog                  | `agf query` · `agf search "<text>"`   |
+| Need                                      | Command                                   |
+| ----------------------------------------- | ----------------------------------------- |
+| Decompose a task into subtasks (≤2h each) | `agf decompose <id>`                      |
+| Reusable decomposition templates          | `agf template list`, `agf template apply` |
+| Completeness gaps + driver-agnostic fixes | `agf gaps --severity required --json`     |
+| Board view: status, WIP, flow metrics     | `agf kanban`                              |
+| Query/search the backlog                  | `agf query` · `agf search "<text>"`       |
 
 ### 4. IMPLEMENT — the build loop (see SKILL.md)
 
@@ -57,7 +57,7 @@ and (where it lists) `--json` for token economy.
 | Pipeline: wake-up + next + context + in_progress      | `agf start`                                          |
 | Granular pull / context-pack                          | `agf next` · `agf context <id>`                      |
 | Delegation spec / ingest executor result              | `agf brief <id>` · `agf submit <id> --result <json>` |
-| Autonomous sprint loop (guardrails)                   | `agf autopilot [--simulate\|--live]`                 |
+| Autonomous sprint loop (guardrails)                   | `agf autopilot --simulate` / `agf autopilot --live`  |
 | Deterministic scaffold / RAG-OUT reuse                | `agf scaffold <name>` · `agf montar-output`          |
 | Code intelligence: index, search, impact, LSP         | `agf code`                                           |
 | Compound ops in one store cycle                       | `agf pipeline` · `agf exec`                          |
@@ -65,17 +65,17 @@ and (where it lists) `--json` for token economy.
 
 ### 5. VALIDATE — prove it, don't claim it
 
-| Need                                    | Command                                                 |
-| --------------------------------------- | ------------------------------------------------------- |
-| Definition of Done checks               | `agf check <id>`                                        |
-| Phase-readiness gates                   | `agf gate <design\|review\|handoff\|deploy\|listening>` |
-| Quality gate 95/95                      | `agf quality`                                           |
-| Agent-readiness score (9 dims, A–D)     | `agf harness [--saturation]`                            |
-| TDD quality score 0–100                 | `agf tdd-score <id>`                                    |
-| Run affected tests / lint (graph-aware) | `agf test` · `agf lint`                                 |
-| Tokens/$ + cost-per-success             | `agf metrics [--economy-report]`                        |
-| Real scenarios → scorecard              | `agf eval --models <ids> --live`                        |
-| Epistemic-tier honesty ladder           | `agf provenance promote\|downgrade\|hash`               |
+| Need                                    | Command                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| Definition of Done checks               | `agf check <id>`                                                            |
+| Phase-readiness gates                   | `agf gate <design\|review\|handoff\|deploy\|listening>`                     |
+| Quality gate 95/95                      | `agf quality`                                                               |
+| Agent-readiness score (9 dims, A–D)     | `agf harness [--saturation]`                                                |
+| TDD quality score 0–100                 | `agf tdd-score <id>`                                                        |
+| Run affected tests / lint (graph-aware) | `agf test` · `agf lint`                                                     |
+| Tokens/$ + cost-per-success             | `agf metrics [--economy-report]`                                            |
+| Real scenarios → scorecard              | `agf eval --models <ids> --live`                                            |
+| Epistemic-tier honesty ladder           | `agf provenance promote`, `agf provenance downgrade`, `agf provenance hash` |
 
 ### 6. REVIEW — read the flow, not the vibes
 
@@ -88,12 +88,12 @@ and (where it lists) `--json` for token economy.
 
 ### 7. HANDOFF — make the next session resumable
 
-| Need                                   | Command                                    |
-| -------------------------------------- | ------------------------------------------ |
-| Write/read/search/rm project memory    | `agf memory write\|read\|list\|search\|rm` |
-| Create/list/restore graph snapshots    | `agf snapshot create\|list\|restore`       |
-| Serialize the graph as JSON            | `agf export`                               |
-| Inspect the unified session read-model | `agf session show\|grants\|events`         |
+| Need                                   | Command                                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Write/read/search/rm project memory    | `agf memory write`, `agf memory read`, `agf memory list`, `agf memory search`, `agf memory rm` |
+| Create/list/restore graph snapshots    | `agf snapshot create`, `agf snapshot list`, `agf snapshot restore`                             |
+| Serialize the graph as JSON            | `agf export`                                                                                   |
+| Inspect the unified session read-model | `agf session show`, `agf session grants`, `agf session events`                                 |
 
 ### 8. DEPLOY — ship gate
 
@@ -105,12 +105,12 @@ and (where it lists) `--json` for token economy.
 
 ### 9. LISTENING — new cycle / maintenance
 
-| Need                                     | Command                            |
-| ---------------------------------------- | ---------------------------------- |
-| Add nodes / import the next PRD          | `agf node add` · `agf import-prd`  |
-| Neighbor-repo capability diff → insights | `agf scan-repos`                   |
-| Knowledge consolidation (REM-inspired)   | `agf dream start\|status\|history` |
-| Self-heal graph noise (MAPE-K)           | `agf heal`                         |
+| Need                                     | Command                                                    |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| Add nodes / import the next PRD          | `agf node add` · `agf import-prd`                          |
+| Neighbor-repo capability diff → insights | `agf scan-repos`                                           |
+| Knowledge consolidation (REM-inspired)   | `agf dream start`, `agf dream status`, `agf dream history` |
+| Self-heal graph noise (MAPE-K)           | `agf heal`                                                 |
 
 ---
 
@@ -135,7 +135,7 @@ threshold) · `agf compress` (tool-output compressor) · `agf retrieve <hash>`
 
 `agf learning` (per-agent perf, routing, export) · `agf memory write pheromone-<slug>`
 (stigmergy trails) · `agf colony-health [--history]` · `agf caste list|show` ·
-`agf swarm session|claim|mailbox|consensus` (multi-agent fabric, opt-in) ·
+`agf swarm init`, `agf swarm claim`, `agf swarm status` (multi-agent fabric, opt-in) ·
 `agf dream` (REM consolidation) · `agf immune` (Danger-Theory source defense) · `agf heal`.
 
 ### Graph data layer (zero MCP)
@@ -155,6 +155,6 @@ threshold) · `agf compress` (tool-output compressor) · `agf retrieve <hash>`
 ## Discovery (never memorize — ask agf)
 
 - `agf help` — friendly grouped index + first steps
-- `agf --help` / `agf <cmd> --help` — full command/flag list (commander)
+- `agf help` — full command/flag list (commander)
 - `agf retrieve-command "<intenção>"` — RAG-IN: natural-language intent → exact command
 - `agf skill list` — lifecycle skills available to drive each phase

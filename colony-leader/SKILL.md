@@ -1,6 +1,6 @@
 ---
 name: colony-leader
-description: 'Use when you LEAD a colony of agent sessions ("ants") that share one agf graph — you assign tasks, review what the ants report, and give the human one status report per round. The reviewer merges and pushes; you remove the merged worktrees. The entry point for the leader role: it routes each step of the round to the agf command and the lifecycle skill that own it (graph-backlog-generation, graph-builder-leafcutter, graph-woodpecker) instead of repeating them. Pair with colony-ant, which each worker session follows. NOT for working alone on one task (graph-builder-leafcutter). Triggers — colony-leader, leader, lead the colony, orchestrate ants, assign tasks to agents, merge ant branches, colony report, status da colônia, liderar a colônia, conduzir as formigas.'
+description: 'Use when you LEAD a colony of agent sessions ("ants") that share one `agf` graph — you assign tasks, review what the ants report, and give the human one status report per round. The reviewer merges and pushes; you remove the merged worktrees. The entry point for the leader role: it routes each step of the round to the `agf` command and the lifecycle skill that own it (graph-backlog-generation, graph-builder-leafcutter, graph-woodpecker) instead of repeating them. Pair with colony-ant, which each worker session follows. NOT for working alone on one task (graph-builder-leafcutter). Triggers — colony-leader, leader, lead the colony, orchestrate ants, assign tasks to agents, merge ant branches, colony report, status da colônia, liderar a colônia, conduzir as formigas.'
 triggers:
   - colony-leader
   - leader
@@ -38,14 +38,14 @@ detail**. Open that skill when you need the detail; do not copy it here.
 
 ## The round
 
-| # | Step | Command | Owner skill |
-|---|------|---------|-------------|
-| 1 | See the board | `agf colony report --format markdown` · `agf claims --colony` | — |
-| 2 | Assign | `agf assign <id> <ant>` (durable; `agf next --agent <ant>` delivers it first) | graph-backlog-generation (what is ready) |
-| 3 | Answer decisions | reply to the ant; record the decision in the node (`agf node update`) | — |
-| 4 | Review the report | check the ant's report against the checklist below | graph-builder-leafcutter (DoD) |
-| 5 | Remove merged worktrees | after the reviewer merges and pushes: `agf ant rm <id>` (git rules: `colony-git`) | — |
-| 6 | Report to the human | `agf colony report --format markdown` | — |
+| #   | Step                    | Command                                                                           | Owner skill                              |
+| --- | ----------------------- | --------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1   | See the board           | `agf colony report --format markdown` · `agf claims --colony`                     | —                                        |
+| 2   | Assign                  | `agf assign <id> <ant>` (durable; `agf next --agent <ant>` delivers it first)     | graph-backlog-generation (what is ready) |
+| 3   | Answer decisions        | reply to the ant; record the decision in the node (`agf node update`)             | —                                        |
+| 4   | Review the report       | check the ant's report against the checklist below                                | graph-builder-leafcutter (DoD)           |
+| 5   | Remove merged worktrees | after the reviewer merges and pushes: `agf ant rm <id>` (git rules: `colony-git`) | —                                        |
+| 6   | Report to the human     | `agf colony report --format markdown`                                             | —                                        |
 
 ### 1 — See the board
 

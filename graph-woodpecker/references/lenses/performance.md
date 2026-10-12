@@ -5,29 +5,29 @@ GATES step judges the code; this lens gives the numbers and the patterns to look
 
 ## Thresholds: pass / warn / critical
 
-| Metric                            | Pass     | Warn       | Critical |
-| --------------------------------- | -------- | ---------- | -------- |
-| Build time                        | < 30 s   | 30 to 60 s | > 60 s   |
-| JS bundle, landing page (gzip)    | < 150 KB | 150 to 250 KB | > 250 KB |
-| JS bundle, app page (gzip)        | < 300 KB | 300 to 450 KB | > 450 KB |
-| JS bundle, microsite (gzip)       | < 80 KB  | 80 to 130 KB | > 130 KB |
-| CSS bundle                        | < 30 KB  | 30 to 50 KB | > 50 KB  |
-| Event loop lag                    | < 10 ms  | 10 to 50 ms | > 50 ms  |
-| Tool or API response (p95)        | < 200 ms | 200 to 500 ms | > 500 ms |
-| RAG query latency                 | < 300 ms | 300 to 800 ms | > 800 ms |
-| FCP                               | < 1.5 s  | 1.5 to 3.0 s | > 3.0 s  |
-| LCP                               | < 2.5 s  | 2.5 to 4.0 s | > 4.0 s  |
-| CLS                               | < 0.1    | 0.1 to 0.25 | > 0.25   |
-| Regression against baseline       | < 10%    | 10 to 20%  | > 20%    |
+| Metric                         | Pass     | Warn          | Critical |
+| ------------------------------ | -------- | ------------- | -------- |
+| Build time                     | < 30 s   | 30 to 60 s    | > 60 s   |
+| JS bundle, landing page (gzip) | < 150 KB | 150 to 250 KB | > 250 KB |
+| JS bundle, app page (gzip)     | < 300 KB | 300 to 450 KB | > 450 KB |
+| JS bundle, microsite (gzip)    | < 80 KB  | 80 to 130 KB  | > 130 KB |
+| CSS bundle                     | < 30 KB  | 30 to 50 KB   | > 50 KB  |
+| Event loop lag                 | < 10 ms  | 10 to 50 ms   | > 50 ms  |
+| Tool or API response (p95)     | < 200 ms | 200 to 500 ms | > 500 ms |
+| RAG query latency              | < 300 ms | 300 to 800 ms | > 800 ms |
+| FCP                            | < 1.5 s  | 1.5 to 3.0 s  | > 3.0 s  |
+| LCP                            | < 2.5 s  | 2.5 to 4.0 s  | > 4.0 s  |
+| CLS                            | < 0.1    | 0.1 to 0.25   | > 0.25   |
+| Regression against baseline    | < 10%    | 10 to 20%     | > 20%    |
 
 ## Algorithm budget by input size
 
-| Input size | Acceptable               | Examples                              |
-| ---------- | ------------------------ | ------------------------------------- |
-| n < 100    | O(n²) is fine            | Nested loops over small lists         |
-| n < 1 K    | O(n²) acceptable; prefer O(n log n) | Insertion sort, simple join |
-| n < 100 K  | O(n log n) required      | Merge sort, binary search, heaps      |
-| n ≥ 100 K  | O(n) or O(n log n) only  | Hash lookups, BFS/DFS                 |
+| Input size | Acceptable                          | Examples                         |
+| ---------- | ----------------------------------- | -------------------------------- |
+| n < 100    | O(n²) is fine                       | Nested loops over small lists    |
+| n < 1 K    | O(n²) acceptable; prefer O(n log n) | Insertion sort, simple join      |
+| n < 100 K  | O(n log n) required                 | Merge sort, binary search, heaps |
+| n ≥ 100 K  | O(n) or O(n log n) only             | Hash lookups, BFS/DFS            |
 
 Rule of thumb: if the inner and outer loops both touch n items, check that n < 1 K or replace
 the inner loop with a hash lookup.

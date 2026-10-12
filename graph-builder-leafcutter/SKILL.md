@@ -1,6 +1,6 @@
 ---
 name: graph-builder-leafcutter
-description: Use when an unblocked task exists in the agf graph and you want it built end-to-end — autonomously and perpetually — pulling the next task (WIP=1), investigating, implementing with TDD, learning, and selecting the next until the backlog is exhausted. Use right after graph-backlog-generation injects a backlog, or to make agf dogfood its own backlog. NOT for planning or writing a PRD (that is graph-backlog-generation). Triggers — graph-builder-leafcutter, leafcutter, golden-wren, build loop, implement the backlog, dogfood loop, continuous improvement, self-heal loop, loop de implementação, esgotar backlog, melhoria contínua.
+description: Use when an unblocked task exists in the `agf` graph and you want it built end-to-end — autonomously and perpetually — pulling the next task (WIP=1), investigating, implementing with TDD, learning, and selecting the next until the backlog is exhausted. Use right after graph-backlog-generation injects a backlog, or to make `agf` dogfood its own backlog. NOT for planning or writing a PRD (that is graph-backlog-generation). Triggers — graph-builder-leafcutter, leafcutter, golden-wren, build loop, implement the backlog, dogfood loop, continuous improvement, self-heal loop, loop de implementação, esgotar backlog, melhoria contínua.
 triggers:
   - graph-builder-leafcutter
   - leafcutter
@@ -91,7 +91,7 @@ Workflow below is the same loop for stronger models; this is the compiled versio
      each `requiredRuntime` and continue waiting — do NOT signal the planner as exhausted.
    - `NO_TASKS` + `hardBlocks[]` empty + backlog non-empty (`agf stats`) → escalate:
      output "blocked: backlog non-empty but nothing unblocked" and surface to user.
-   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: backlog-empty é o _gatilho_ do harvest, não o fim do loop. É automático — `agf autopilot` roda HARVEST por padrão no NO_TASKS e puxa de novo (WIRE-tasks geradas realimentam o loop; ele só para quando o harvest também está seco). Passe `--no-harvest` para desligar. Para rodar à mão: `agf migrate-ac --commit` (colapsa AC-nodes nos pais), fechar specs cujos implementadores já terminaram, `agf risk triage` (surface/promote), `agf wire-dormant --ingest` (capacidades dormentes → WIRE-tasks). O harvest gerou tasks novas? → volte ao passo 1 (o loop se realimenta). **Só se o harvest TAMBÉM estiver seco** → STOP: informe "backlog + harvest esgotados" e sinalize `graph-backlog-generation`.
+   - `NO_TASKS` + backlog empty → **HARVEST, don't stop**: backlog-empty é o _gatilho_ do harvest, não o fim do loop. É automático — `agf autopilot` roda HARVEST por padrão no NO_TASKS e puxa de novo (WIRE-tasks geradas realimentam o loop; ele só para quando o harvest também está seco). Passe `--no-harvest` para desligar. Para rodar à mão: `agf migrate-ac --commit` (colapsa AC-nodes nos pais), fechar specs cujos implementadores já terminaram, `agf risk triage` (surface/promote), `agf wire-dormant` (capacidades dormentes → WIRE-tasks). O harvest gerou tasks novas? → volte ao passo 1 (o loop se realimenta). **Só se o harvest TAMBÉM estiver seco** → STOP: informe "backlog + harvest esgotados" e sinalize `graph-backlog-generation`.
    - Dirigindo o loop via `agf autopilot` em vez de rodar os passos 1-9 à mão? Confira o motivo `stopped`, não o `code` do `agf next` — campo diferente, comando diferente. `stopped: 'wip_held'` significa que uma task JÁ está `in_progress` (o id dela vem em `heldTaskId`) — WIP=1 é imposto aqui, não é conselho (BUG-043). Termine ou escale essa task antes; o autopilot não pega uma segunda em silêncio.
 2. **Pick when many are ready (no math):** lowest-id `must`; no `must` → lowest-id
    `should`; tie → lowest id. Ignore the fitness formula unless you can compute it.
@@ -111,10 +111,10 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    orphan that blocks the whole colony.
 6. Write the **failing test first** from the AC → run it → see it fail → minimal code to
    pass. No test written = **STOP** (TDD is mandatory).
-7. `npm run test:blast` → red? fix; **max 3 tries**, still red → `agf node add --type bug …`
+7. `npm run test:blast` → red? fix; **max 3 tries**, still red → `agf node add --type bug --title "..."`
    and **STOP**. Green → continue.
 8. `agf check <id>` → a required check fails → fix it, or file a `risk` node, then retry.
-9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk …`,
+9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk --title "..."`,
    then retry com **`--test-files <your test file>`** para reduzir o runner DETECTADO a esse
    arquivo, e aceite o veredito dele. **Não** use `--test-cmd` neste caminho: desde o BUG-076
    (commit `fbc68a16`), o `agf` recusa um `--test-cmd` vindo do agente sempre que há um runner
@@ -178,7 +178,7 @@ Load on demand.
 > deploy · listening, plus the provider/economy, learning/colony, graph-data, and
 > ops families (every one of the ~110 commands) — load
 > [references/capability-map.md](references/capability-map.md) on demand. Never
-> memorize commands: `agf help` · `agf <cmd> --help` · `agf retrieve-command "<intent>"`.
+> memorize commands: `agf help` · `agf help` · `agf retrieve-command "<intent>"`.
 
 > **Command-agnostic:** commands below are illustrative — the source of truth for the
 > exact, current command is always `agf retrieve-command "<intent>"` (RAG-IN) or `agf help`.
@@ -189,7 +189,7 @@ Load on demand.
 ### Step 1 — Scan & select (Monitor + ACO/GA)
 
 ```bash
-agf stats --select data.byStatus · agf harness --saturation · agf gaps --severity required · agf learning stats --select data.accuracy
+`agf stats --select data.byStatus` · `agf harness --saturation` · `agf gaps --severity required` · `agf learning stats --select data.accuracy`
 ```
 
 Pick the next task by **fitness = PERT × Pareto × value**, biased by pheromone
@@ -199,7 +199,7 @@ decay. This is the ACO + GA-inspired selection.
 ### Step 2 — Pull, then INVESTIGATE before you touch code (golden rule)
 
 ```bash
-# Encapsule os passos agf num só round-trip (sem shell &&/|) — economia de tokens:
+# Encapsule os passos `agf` num só round-trip (sem shell &&/|) — economia de tokens:
 agf exec chain "next --select data.node.id; preflight '<topic>'; context <id> --compressed"
 agf search "<feature>" ; rg "<module|feature|symbol>" src   # find what exists (rg → grep -rn where no ripgrep)
 agf node status <id> in_progress  # claim it only AFTER you know what you'll touch
@@ -286,7 +286,7 @@ requires harness ≥ 70. Don't run the full suite per task; don't push on a red 
 ### Step 5 — Learn & reinforce (stigmergy)
 
 ```bash
-agf savings · agf metrics --economy-report · agf learning · agf memory write pheromone-<slug>
+`agf savings` · `agf metrics --economy-report` · `agf learning` · `agf memory write pheromone-<slug>`
 ```
 
 Deposit a pheromone trail for what worked **and the gotchas you hit** (so the next
@@ -349,7 +349,7 @@ exists anywhere and both extend the same base — update the one test that asser
 type, that's intentional, not a regression. (b) **new standalone command** — when a pure,
 already-correct function has no natural existing call site (the flow that "should" call it
 is detection-only, or forcing it into a tested flow risks behavior change), add a small new
-`agf <verb> <arg>` command rather than bending an existing one. Zero risk: nothing calls it
+a new `agf` subcommand rather than bending an existing one. Zero risk: nothing calls it
 unless a user explicitly does.
 
 **Rigor check when a wire's integration test passes green on the first run** (no visible

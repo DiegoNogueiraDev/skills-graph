@@ -36,7 +36,7 @@ only when the user already named the exact scope.
 versions — `agf gate analyze` does **not** exist in current builds (valid phases:
 `design · review · handoff · deploy · listening · all`), and `agf gaps` may not
 accept `--json` yet (parse the text envelope or use `--select`). Always confirm with
-`agf gate --help` / `agf gaps --help` (or `agf retrieve-command`) rather than assuming.
+`agf help` (or `agf retrieve-command`) rather than assuming.
 
 **`agf gaps` scans the WHOLE graph, not your subtree.** In a repo with a 1000+ node
 backlog it returns piles of _pre-existing_ required gaps that are **not yours** — do
@@ -412,7 +412,7 @@ cycle's critic findings are its training signal.
 - **OKR** — Grove (Intel, 1970s; popularised by Doerr, _Measure What Matters_): the Key
   Result measures the **outcome, not the output**. So the epic's KR is the surface
   _operating_, observed — not "the service exists".
-- **Stigmergy / ant colonies** — Grassé (1959) → Dorigo's ACO (1992), which agf already runs
+- **Stigmergy / ant colonies** — Grassé (1959) → Dorigo's ACO (1992), which `agf` already runs
   in the builder: no ant holds the global plan; each completes **one local action** and the
   colony converges by reinforcing successful traces. A green AC at the surface is the
   pheromone that marks the path toward the objective — outside-in slicing IS the colony

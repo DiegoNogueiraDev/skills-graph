@@ -98,7 +98,7 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    > mesmo comando também chama `out.ok()` — o stdout fica com texto+JSON e nenhum consumidor
    > (jq, exec chain, `--select`) parseia. Fix: CAPTURE o output do child (`encoding:'utf8'`,
    > nunca `inherit`) e ESTRUTURE-o em `data`; emita só o envelope. Sinal de detecção grátis:
-   > `agf <cmd> --select data.x | jq .` — se `jq` engasga, o comando está furando o contrato.
+   > `agf stats --select data.x | jq .` — se `jq` engasga, o comando está furando o contrato.
    > (Corrigido assim em `agf lint`; a mesma assinatura vale para qualquer wrapper de tool.)
    > **Triangulation (anti-hallucination).** A task is only really delivered when AC ↔ code ↔
    > **physical test** all align. `phantom_done` crosses `status=done` against the filesystem on
@@ -158,7 +158,7 @@ Workflow below is the same loop for stronger models; this is the compiled versio
 9. **Security pass (every fix):** run the OWASP/STRIDE checklist below; any new exposure
    → `agf node add --type risk`. Never introduce a `console.log`, secret, or `any`.
 10. `agf check <id>` (DoD) → `agf done <id>` (honest gate). Red on an **unrelated**
-    pre-existing test → `agf node add --type risk …`, then
+    pre-existing test → `agf node add --type risk --title "..."`, then
     `agf done <id> --test-cmd "npx vitest run <your test file>"`.
 11. `agf memory write pheromone-fix-<slug>` (root cause + the fix + the gotcha) → go to 1.
 
@@ -217,7 +217,7 @@ WIP = 1 (Little's Law: CT = WIP/TH). Deep methodology lives in the knowledge-bas
 (load on demand): `effective-debugging` & `klein-bug-hunters-diary` (bug hunting),
 `fowler-refactoring` (safe transforms), `khorikov-unit-testing` & `whittaker-google-testing`
 (test design), `gregg-systems-performance` (observability/USE/RED). Never memorize
-commands: `agf help` · `agf <cmd> --help` · `agf retrieve-command "<intent>"`.
+commands: `agf help` · `agf help` · `agf retrieve-command "<intent>"`.
 
 ## Workflow
 
@@ -226,7 +226,7 @@ commands: `agf help` · `agf <cmd> --help` · `agf retrieve-command "<intent>"`.
 ```bash
 agf harness --violations   # 9-dim quality (types·tests·fitness·docs·naming·errors·context·provenance·connectivity)
 agf gaps --severity required   # traceability, AC coverage, missing edge/error cases
-agf lint   ·   agf quality   # lint + security rules + quality bars
+`agf lint` · `agf quality`   # lint + security rules + quality bars
 agf insights --select data.hotspots   # churn/regression hotspots — where bugs cluster
 agf provenance   # untracked/unattributed changes (audit trail gaps)
 ```
@@ -237,15 +237,15 @@ style/security (lint), history (insights/hotspots). Triangulate; don't trust one
 **Lentes de HARDEN** — cada uma tem um critério de quando usar e o passo a passo em
 `references/lenses/`. Abra só a que a task pede:
 
-| Lente | Quando usar | Arquivo |
-|-------|-------------|---------|
-| bugs | reproduzir e achar causa raiz de falha conhecida | [`references/lenses/bugs.md`](references/lenses/bugs.md) |
-| quality | dívida, complexidade, duplicação, violação de SOLID | [`references/lenses/quality.md`](references/lenses/quality.md) |
-| performance | latência, p95, custo de startup, N+1 | [`references/lenses/performance.md`](references/lenses/performance.md) |
-| dependency | pacote com CVE, licença, pacote obsoleto | [`references/lenses/dependency.md`](references/lenses/dependency.md) |
-| accessibility | a task muda UI interativa (dashboard, componente, form) | [`references/lenses/accessibility.md`](references/lenses/accessibility.md) |
-| api-design | muda o envelope do CLI, flags, rotas ou schemas de entrada | [`references/lenses/api-design.md`](references/lenses/api-design.md) |
-| harness | fechar gate de qualidade, deploy, ou órfãos do `agf harness --dormant` | [`references/lenses/harness.md`](references/lenses/harness.md) |
+| Lente         | Quando usar                                                            | Arquivo                                                                    |
+| ------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| bugs          | reproduzir e achar causa raiz de falha conhecida                       | [`references/lenses/bugs.md`](references/lenses/bugs.md)                   |
+| quality       | dívida, complexidade, duplicação, violação de SOLID                    | [`references/lenses/quality.md`](references/lenses/quality.md)             |
+| performance   | latência, p95, custo de startup, N+1                                   | [`references/lenses/performance.md`](references/lenses/performance.md)     |
+| dependency    | pacote com CVE, licença, pacote obsoleto                               | [`references/lenses/dependency.md`](references/lenses/dependency.md)       |
+| accessibility | a task muda UI interativa (dashboard, componente, form)                | [`references/lenses/accessibility.md`](references/lenses/accessibility.md) |
+| api-design    | muda o envelope do CLI, flags, rotas ou schemas de entrada             | [`references/lenses/api-design.md`](references/lenses/api-design.md)       |
+| harness       | fechar gate de qualidade, deploy, ou órfãos do `agf harness --dormant` | [`references/lenses/harness.md`](references/lenses/harness.md)             |
 
 **Economy-integrity lenses (deterministic signals the economy pillars added — HARDEN must
 consume them, they are not just dashboards).** As the token-economy machinery ships, its own
@@ -446,7 +446,7 @@ is the tell.
 ### Step 6 — CLOSE + LEARN
 
 ```bash
-agf done <id>   ·   agf memory write pheromone-fix-<slug>   ·   agf heal
+`agf done <id>` · `agf memory write pheromone-fix-<slug>` · `agf heal`
 ```
 
 Deposit the root cause + the fix + the gotcha as a pheromone trail so the next hunt skips

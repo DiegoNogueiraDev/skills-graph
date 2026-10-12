@@ -5,7 +5,7 @@ System file. Not a skill itself. Referenced by lifecycle and domain skills via `
 **Skills não duplicam mais esta seção.** Cada skill tem apenas 4 linhas de referência compacta.
 Consulte esta seção para detalhes completos de economia de tokens, perfis e anti-padrões.
 
-**CLI-first:** every workflow drives the `agf` CLI — there is NO MCP server. Commands below are real `agf <cmd>` invocations. A skill that names an MCP tool is rejected by the test suite — that tool is not mounted in a real session, so the agent either errors or invents the result.
+**CLI-first:** every workflow drives the `agf` CLI — there is NO MCP server. Commands below are real `agf` invocations. A skill that names an MCP tool is rejected by the test suite — that tool is not mounted in a real session, so the agent either errors or invents the result.
 
 **Companion protocols** — read the one the task needs, not all three:
 
@@ -74,7 +74,7 @@ agf next → agf context <id> → [TDD] → agf check <id> → agf node status <
 
 **O agente externo conduz** (delegate-first: o LLM é seu, não do agf). Use esta tabela para escolher a ferramenta certa por intenção. Não lembra o comando exato? **`agf retrieve-command "<intenção>"`** (RAG-IN) resolve qualquer caso abaixo.
 
-| Sua intenção                                                              | Ferramenta agf                                                           |
+| Sua intenção                                                              | Ferramenta `agf`                                                         |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Ideia vaga / "o que construir?" / planejar do zero                        | skill **graph-backlog-generation** (PLAN) → vira backlog                 |
 | Implementar o backlog (task pronta) end-to-end                            | skill **graph-builder-leafcutter** (BUILD) · `agf start`                 |
@@ -87,7 +87,7 @@ agf next → agf context <id> → [TDD] → agf check <id> → agf node status <
 | Delegar uma task a um executor                                            | `agf brief <id>` → executor → `agf submit <id> --result`                 |
 | Achar lacunas de completude (req↔task↔test, AC, NFR)                      | `agf gaps --severity required --select data`                             |
 | Medir prontidão/qualidade do código                                       | `agf harness` (9 dimensões, A–D)                                         |
-| Encadear vários passos agf (1 round-trip)                                 | `agf exec chain "a; b; c"` · `agf exec pipe`                             |
+| Encadear vários passos `agf` (1 round-trip)                               | `agf exec chain "a; b; c"` · `agf exec pipe`                             |
 | **Rodar QUALQUER shell** (git/ls/dir/grep/find/cat/test/build/powershell) | **`agf compress run -- <cmd>`** (hookless) · Claude Code = hook auto     |
 | Ver/gerenciar o cache de prompt (RAG-cache)                               | `agf cache stats` (hit rate, tokens/$ poupados) · `agf cache plan-store` |
 | Escolher provider/custo da chamada LLM (modo `--live`)                    | `agf provider use <id>` · `--pin <model>` · tier-router                  |
@@ -102,7 +102,7 @@ agf next → agf context <id> → [TDD] → agf check <id> → agf node status <
 
 ## Definition of Done
 
-Checks executados em `agf check <id>` (e em `agf done <id>`) — lista completa e severidades em `agf check --help` e na tabela gerada do catálogo:
+Checks executados em `agf check <id>` (e em `agf done <id>`) — lista completa e severidades em `agf help` e na tabela gerada do catálogo:
 
 | #   | Check                     | Severidade   | O que verifica                                                                                                    |
 | --- | ------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -176,10 +176,10 @@ Grades: A (85-100%), B (70-84%), C (55-69%), D (<55%).
 
 ### Compressão de Output (TODO comando shell externo)
 
-**Regra dura:** TODO comando de shell — `git`, `ls`, `dir`, `cat`, `grep`/`rg`, `find`, `npm`/`pnpm`, `cargo`, build, test, **PowerShell**, etc. — passa pela compressão determinística do agf antes de você LER a saída. Saída bruta de shell = tokens desperdiçados.
+**Regra dura:** TODO comando de shell — `git`, `ls`, `dir`, `cat`, `grep`/`rg`, `find`, `npm`/`pnpm`, `cargo`, build, test, **PowerShell**, etc. — passa pela compressão determinística do `agf` antes de você LER a saída. Saída bruta de shell = tokens desperdiçados.
 
 - `agf compress run -- <cmd>` — roda o comando e comprime o stdout (ou `cmd | agf compress run --stdin`). Reversível via `agf retrieve <hash>` (CCR).
-- `agf compress` — a engine de compressão; `discover` (acha filtros) · `test <file>` (preview). Nunca envolva `agf` em `agf compress` — a saída do próprio agf já é mínima.
+- `agf compress` — a engine de compressão; `discover` (acha filtros) · `test <file>` (preview). Nunca envolva `agf` em `agf compress` — a saída do próprio `agf` já é mínima.
 - `agf compress discover` — descobre filtros automáticos
 - `agf compress test <file>` — comprime output de teste
 
@@ -206,7 +206,7 @@ A _mesma_ chamada custa 10–100× menos no provider/modelo certo. Roteie por cu
 | `agf doctor --providers`             | Início de sessão — ver quais providers há no env      | Evita escolher um provider sem chave    |
 | `agf provider use <id>`              | Escolher por onde a chamada LLM vai (qualquer agente) | Troca o gateway sem MCP                 |
 | `--pin <model>` (em `run`/`deliver`) | Fixar um modelo barato p/ a task                      | Ex.: `--pin deepseek/deepseek-v4-flash` |
-| tier-router (automático)             | Deixe o agf escolher: cheap→build→frontier            | Modelo proporcional à complexidade      |
+| tier-router (automático)             | Deixe o `agf` escolher: cheap→build→frontier          | Modelo proporcional à complexidade      |
 | `agf eval --models <ids> --live`     | Decidir o melhor custo-por-sucesso                    | Scorecard resolve% × $                  |
 
 > **Regra:** tarefa trivial/mecânica → tier cheap (deepseek-v4-flash); build → llama-4-maverick; só o que exige raciocínio profundo → frontier. Nunca queime um modelo frontier num lint/rename.
@@ -240,7 +240,7 @@ agf next --select data.node.id,data.node.title
 agf context node_abc123 --compressed
 
 # Query com projeção
-agf query --status ready --select data[].id,data[].title
+`agf query --status ready --select data.id`
 
 # Composição nativa (sem shell: nada de $(), &&, |, /tmp) — encadeia no próprio agf
 agf exec chain "next --select data.node.id; context <id> --compressed"
@@ -318,13 +318,13 @@ Distilled from real delivery loops. They are what makes two different users/mode
 13. **Enforcement = deterministic trigger, not "the agent remembers".** What must always hold descends into a gate that fires by itself: `agf check` (DoD) · `agf gate <phase>` · `PHANTOM_TESTFILE` on `agf done` · `agf lint-files` (800-line git gate). A rule with no trigger is a checklist, not enforcement.
 14. **Decide the next step (don't ask "which?").** Every cycle ends by choosing the single best next action and **naming the principle** that chose it — see Close-out Report Format below.
 
-### ↔ agf enforcement map (bind each rule to what mechanically delivers it)
+### ↔ mecanismo `agf` que aplica (bind each rule to what mechanically delivers it)
 
 So any model honors the rules from the CLI alone — no reliance on memory:
 
-| Rule                             | agf mechanism that delivers/enforces it                                                                              |
+| Rule                             | `agf` mechanism that delivers/enforces it                                                                            |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1 investigate / EXPAND           | `agf preflight "<topic>"` (git+graph+WIP) · `agf search`/`agf query`/`agf code search` · `agf wire-dormant --ingest` |
+| 1 investigate / EXPAND           | `agf preflight "<topic>"` (git+graph+WIP) · `agf search`/`agf query`/`agf code search` · `agf wire-dormant`          |
 | 2 spec = source of truth         | read spec docs / `agf context <id>` before coding; assumption → docblock + close-out                                 |
 | 3 DRY / single source            | `contract` node = authoritative shape · RAG-OUT `agf montar-output` caches scaffold                                  |
 | 4 TDD mandatory                  | `agf check` (DoD) · `agf tdd-score` · `npm run test:blast` gate                                                      |
@@ -332,7 +332,7 @@ So any model honors the rules from the CLI alone — no reliance on memory:
 | 6 prove value in consumer mode   | DELIVERY TABLE `Prova` (receipt + commit) + reproduce via consumer path · `agf metrics`/`agf savings` (real numbers) |
 | 7 honesty nodes                  | `agf node add --type risk\|bug` **before** `done`; pre-existing failure proven via `git stash -u`→rerun→pop          |
 | 8 quality is a gate              | `agf harness --violations` · `agf lint-files` (files<800/fn<50/no dead code/typed errors)                            |
-| 9 deterministic sweeps + economy | `agf … --select <path>` · `agf exec chain` · `agf compress` (external output) · diff-edits                           |
+| 9 deterministic sweeps + economy | `--select <path>` em qualquer comando · `agf exec chain` · `agf compress` (external output) · diff-edits             |
 | 10 pheromones                    | `agf memory write pheromone-<slug>` (rule + when to discard; code/graph beat memory)                                 |
 | 11 git por modo                  | solo: BUILD/HARDEN fazem git; colônia: colony-git; PLAN nunca toca git                                               |
 | 12 single loop                   | `agf brief`/`agf submit` (delegate in-loop, no swarm)                                                                |
@@ -347,8 +347,8 @@ Single source of the handoff every graph-\* pillar (PLAN · BUILD · HARDEN) ren
 
 1. **Delivery table** — one row per delivered node:
 
-   | Delivery | What | Proof |
-   | -------- | ---- | ----- |
+   | Delivery            | What                      | Proof                                                                     |
+   | ------------------- | ------------------------- | ------------------------------------------------------------------------- |
    | `<node id>` — title | what changed, in one line | `N tests · commit <sha> · agf check ready` (or the consumer-mode receipt) |
 
 2. **Product value** — for EACH delivery, one sentence on the end-to-end gain for the whole product (the capability it unlocks, moves closer, or makes reliable), from the user's point of view — NOT what the code does in isolation. The observable delta in the consumer's mode (Golden Rule 6), with a number when one exists. If nothing visible changes, say so: it is a sign of a dormant capability.
@@ -357,7 +357,6 @@ Single source of the handoff every graph-\* pillar (PLAN · BUILD · HARDEN) ren
 5. **Assumptions and risks** — every assumption taken where the spec was silent (Golden Rule 2) and every loose end filed as a `risk`/`bug` node (Golden Rule 7), with ids.
 6. **Skill hardening** — the durable lesson the NEXT agent must read in the skill itself: edit the skill (command-agnostic) or say "none".
 7. **Next step: X — because [principle]** — the single chosen next step and the principle that chose it (WSJF, dependency order, TOC bottleneck…) — Golden Rule 14. Never an open "which one?".
-
 
 ---
 
@@ -395,8 +394,8 @@ Every delivery cycle ends with this report to the human. It is how trust is buil
 
 **N tasks + M epics moved to done** (graph: X→Y done). All tasks passed TDD, the blast gate is green, and the code is pushed to main.
 
-| Delivery | What | Proof |
-| -------- | ---- | ----- |
+| Delivery               | What                                                          | Proof                       |
+| ---------------------- | ------------------------------------------------------------- | --------------------------- |
 | **<ID> <short title>** | 1-2 sentences: what changed and WHY (the value, not the diff) | <n> tests · `<commit-hash>` |
 
 **Product value:** for each delivery, one sentence on the effect on the whole product, not the mechanism.

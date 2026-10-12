@@ -19,13 +19,13 @@ agentes lêem isso por `--select`. Trate cada campo e cada código de erro como 
    passa por schema Zod antes de chegar ao núcleo. Conte o que não passa.
 4. **Mudança quebra?** Classifique cada diff antes de decidir versão:
 
-   | Mudança | Classe |
-   |---------|--------|
-   | Campo novo opcional na resposta, comando novo | aditiva, segura |
-   | Remover ou renomear campo, comando ou flag | quebra, precisa de migração |
-   | Trocar tipo (string → número) | quebra |
-   | Parâmetro opcional passa a obrigatório | quebra |
-   | Mudar código de erro ou texto que cliente compara | quebra por Hyrum |
+   | Mudança                                           | Classe                      |
+   | ------------------------------------------------- | --------------------------- |
+   | Campo novo opcional na resposta, comando novo     | aditiva, segura             |
+   | Remover ou renomear campo, comando ou flag        | quebra, precisa de migração |
+   | Trocar tipo (string → número)                     | quebra                      |
+   | Parâmetro opcional passa a obrigatório            | quebra                      |
+   | Mudar código de erro ou texto que cliente compara | quebra por Hyrum            |
 
    Comando para ver o que mudou: `git diff <base>..HEAD -- src/cli/commands src/api/routes src/schemas`.
 

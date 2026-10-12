@@ -1,6 +1,6 @@
 ---
 name: colony-cto
-description: 'Use when you are the CTO session of a colony of agent sessions ("ants") that share one agf graph — you size the team, set priority and scope, read the scoreboard, and give each ant feedback. You never merge and never write an ant''s code. The rules for every role live in the colony constitution; this skill routes to it and never restates it.'
+description: 'Use when you are the CTO session of a colony of agent sessions ("ants") that share one `agf` graph — you size the team, set priority and scope, read the scoreboard, and give each ant feedback. You never merge and never write an ant''s code. The rules for every role live in the colony constitution; this skill routes to it and never restates it.'
 triggers:
   - colony-cto
   - cto

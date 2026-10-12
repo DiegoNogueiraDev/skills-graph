@@ -7,17 +7,17 @@ dimensão baixa. O HUNT já roda o scan; esta lente diz o que fazer com cada res
 **Pesos e dimensões** vêm do scorer vivo, `src/core/harness/harnessability-score.ts`.
 Não copie números daqui: eles mudaram mais de uma vez.
 
-| Dimensão | Quando estiver baixa |
-|----------|----------------------|
-| types | tipos de retorno em funções públicas; `as unknown as` esconde problema, confira com `tsc --noEmit` |
-| tests | falta `src/tests/<módulo>.test.ts` com o basename do módulo. Um teste fraco não passa no TDD, então escreva teste de verdade |
-| fitness | `core/` importando camada de borda (regra de dependências em `.claude/rules/architecture.md`); ciclo de import; arquivo > 800 linhas |
-| docs | JSDoc só onde o porquê não é óbvio. Docstring que repete o nome não ajuda o próximo agente |
-| naming | `data`, `result`, `temp`, `res`; nome de uma letra fora de laço curto |
-| errors | `throw new Error` cru → erro tipado de `utils/errors.ts`; `catch {}` vazio → logar ou relançar |
-| context | JSDoc ausente em export (mesma regra de docs) |
-| provenance | mudança sem atribuição; corrija a convenção, não só o histórico |
-| connectivity | símbolo exportado sem consumidor de produção. Veja a triagem abaixo antes de codar |
+| Dimensão     | Quando estiver baixa                                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| types        | tipos de retorno em funções públicas; `as unknown as` esconde problema, confira com `tsc --noEmit`                                   |
+| tests        | falta `src/tests/<módulo>.test.ts` com o basename do módulo. Um teste fraco não passa no TDD, então escreva teste de verdade         |
+| fitness      | `core/` importando camada de borda (regra de dependências em `.claude/rules/architecture.md`); ciclo de import; arquivo > 800 linhas |
+| docs         | JSDoc só onde o porquê não é óbvio. Docstring que repete o nome não ajuda o próximo agente                                           |
+| naming       | `data`, `result`, `temp`, `res`; nome de uma letra fora de laço curto                                                                |
+| errors       | `throw new Error` cru → erro tipado de `utils/errors.ts`; `catch {}` vazio → logar ou relançar                                       |
+| context      | JSDoc ausente em export (mesma regra de docs)                                                                                        |
+| provenance   | mudança sem atribuição; corrija a convenção, não só o histórico                                                                      |
+| connectivity | símbolo exportado sem consumidor de produção. Veja a triagem abaixo antes de codar                                                   |
 
 **Grade:** A ≥ 85 manter · B ≥ 70 abrir task para a dimensão mais baixa · C ≥ 55 bloquear
 entrega até uma dimensão subir · D < 55 refatorar antes de qualquer feature.

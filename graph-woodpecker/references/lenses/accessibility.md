@@ -18,12 +18,12 @@ Pule em código sem UI.
 
 **Critérios que costumam falhar e não aparecem no axe:**
 
-| SC | Nome | Teste |
-|----|------|-------|
-| 2.4.11 | Focus Appearance | foco com ≥2px de perímetro e ≥3:1 contra a cor vizinha |
-| 2.4.12 | Focus Not Obscured | foco não some atrás de header/footer fixo |
-| 2.5.7 | Dragging Movements | todo arrastar tem alternativa de um toque/clique |
-| 2.5.8 | Target Size | alvo interativo ≥24×24 CSS px (ou espaçamento) |
+| SC     | Nome               | Teste                                                  |
+| ------ | ------------------ | ------------------------------------------------------ |
+| 2.4.11 | Focus Appearance   | foco com ≥2px de perímetro e ≥3:1 contra a cor vizinha |
+| 2.4.12 | Focus Not Obscured | foco não some atrás de header/footer fixo              |
+| 2.5.7  | Dragging Movements | todo arrastar tem alternativa de um toque/clique       |
+| 2.5.8  | Target Size        | alvo interativo ≥24×24 CSS px (ou espaçamento)         |
 
 Contraste mínimo: texto normal 4,5:1; texto grande 3:1; componentes e foco 3:1.
 Informação não pode depender só de cor (erro com ícone + cor, gráfico com padrão).

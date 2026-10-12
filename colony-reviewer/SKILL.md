@@ -1,6 +1,6 @@
 ---
 name: colony-reviewer
-description: 'Use when you are the REVIEWER session of a colony of agent sessions ("ants") that share one agf graph — you read what the ants deliver and decide whether it is safe to merge. You review without editing code. You block a merge only for P1 and for changes that touch the store, the gateway or security; you sample one in five of the rest. The rules live in the colony constitution; this skill routes to it.'
+description: 'Use when you are the REVIEWER session of a colony of agent sessions ("ants") that share one `agf` graph — you read what the ants deliver and decide whether it is safe to merge. You review without editing code. You block a merge only for P1 and for changes that touch the store, the gateway or security; you sample one in five of the rest. The rules live in the colony constitution; this skill routes to it.'
 triggers:
   - colony-reviewer
   - reviewer
@@ -36,6 +36,7 @@ agf constitution --show colony-constitution   # bundle colony-constitution
 ## O que você não faz
 
 - Merge e push seguem o bundle `colony-git` (decisão do dono: o revisor mergeia, o leader só remove worktrees).
+- O merge aprovado sai numa chamada: `agf ant merge <branch> --push` (COL-24). Ele exige main limpo e em dia, recusa branch já contida (`ALREADY_MERGED`), faz `merge --no-ff`, roda tsc, os testes e o eslint/prettier dos arquivos tocados, a catraca de avisos desses arquivos (`LINT_WARNINGS_GREW`), `check:dead-exports`, e com `--push` o `npm run lint` inteiro antes de publicar; conflito ou gate reprovado devolvem o main ao sha anterior. O nó citado nos commits ganha `metadata.mergedSha`, e a saída traz o dry-run do `agf ant gc`. O veredito continua seu: o comando só executa.
 - Não re-testa a entrega inteira: confere o relatório e amostra.
 
 ## Economia de tokens

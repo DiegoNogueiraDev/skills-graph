@@ -1,6 +1,6 @@
 ---
 name: colony-ant
-description: 'Use when you are a WORKER session ("ant") in a colony that shares one agf graph with a leader and other ants — you pull or receive one task, build it with TDD in your own worktree, prove it the way a user would, commit on your own branch, and report to the leader. The entry point for the ant role: it routes each step to the agf command and the lifecycle skill that own it (graph-builder-leafcutter for the TDD cycle, graph-woodpecker for hardening tasks) instead of repeating them. Pair with colony-leader. NOT for leading the colony (colony-leader) or working alone without a leader (graph-builder-leafcutter). Triggers — colony-ant, ant, formiga, worker session, apoio, pull my task, report to leader, sou uma formiga, trabalhar na colônia.'
+description: 'Use when you are a WORKER session ("ant") in a colony that shares one `agf` graph with a leader and other ants — you pull or receive one task, build it with TDD in your own worktree, prove it the way a user would, commit on your own branch, and report to the leader. The entry point for the ant role: it routes each step to the `agf` command and the lifecycle skill that own it (graph-builder-leafcutter for the TDD cycle, graph-woodpecker for hardening tasks) instead of repeating them. Pair with colony-leader. NOT for leading the colony (colony-leader) or working alone without a leader (graph-builder-leafcutter). Triggers — colony-ant, ant, formiga, worker session, apoio, pull my task, report to leader, sou uma formiga, trabalhar na colônia.'
 triggers:
   - colony-ant
   - ant
@@ -36,16 +36,16 @@ the human can unblock your session.
 
 ## The cycle
 
-| # | Step | Command | Owner skill |
-|---|------|---------|-------------|
-| 1 | Get the task | `agf next --agent <you>` (your assigned task comes first) | — |
-| 2 | Claim it | `agf node status <id> in_progress` | — |
-| 3 | Check for duplicates | `agf preflight "<topic>"` · `agf context <id>` | graph-builder-leafcutter |
-| 4 | Build with TDD | red → green → refactor | graph-builder-leafcutter |
-| 5 | Verify | test file · `npm run test:blast` · `tsc` · lint · `agf check <id>` | graph-builder-leafcutter |
-| 6 | Prove as a user | run the real command / open the real screen | — |
-| 7 | Close and commit | `agf node status <id> done` · one commit on `ant/*` | — |
-| 8 | Report | message to the leader (format below) | — |
+| #   | Step                 | Command                                                            | Owner skill              |
+| --- | -------------------- | ------------------------------------------------------------------ | ------------------------ |
+| 1   | Get the task         | `agf next --agent <you>` (your assigned task comes first)          | —                        |
+| 2   | Claim it             | `agf node status <id> in_progress`                                 | —                        |
+| 3   | Check for duplicates | `agf preflight "<topic>"` · `agf context <id>`                     | graph-builder-leafcutter |
+| 4   | Build with TDD       | red → green → refactor                                             | graph-builder-leafcutter |
+| 5   | Verify               | test file · `npm run test:blast` · `tsc` · lint · `agf check <id>` | graph-builder-leafcutter |
+| 6   | Prove as a user      | run the real command / open the real screen                        | —                        |
+| 7   | Close and commit     | `agf node status <id> done` · one commit on `ant/*`                | —                        |
+| 8   | Report               | message to the leader (format below)                               | —                        |
 
 ### 1–2 — Get and claim
 

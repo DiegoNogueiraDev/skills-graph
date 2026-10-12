@@ -202,7 +202,7 @@ tested as strong (leave alone, Lean).
 | Example-map examples    | `agf node add --ac "<GWT>" --ac "<GWT>" …` (one example → one `--ac`)    |
 | Example-map questions   | `agf node add --type risk` — loose-end type; never a silent gap          |
 | Per-task DoD            | `agf check <taskId>` (AC-present + AC-score ≥ 60)                        |
-| Readiness gate (DoR)    | `agf gate <phase>` — confirm phase with `agf gate --help`                |
+| Readiness gate (DoR)    | `agf gate <phase>` — confirm phase with `agf help`                       |
 | Gap closure             | `agf gaps --severity required` (verify `--json`/`--select` via `--help`) |
 
 > Stale-command guard: `agf gate analyze` does **not** exist (phases: design ·

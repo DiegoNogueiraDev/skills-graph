@@ -22,7 +22,7 @@ Read the envelope, not just the command:
 1. **`decision: "fallback_help"` means `command` is `null`.** The engine scored below its own
    gate and is telling you so. Take `fallback` and run `--help`. Do **not** dig into
    `candidates` for a better-looking guess — those are the options it already rejected.
-2. **`decision: "retrieved"` still deserves one check** — `agf <cmd> --help` — before a command
+2. **`decision: "retrieved"` still deserves one check** — `agf help` — before a command
    with side effects. Ranking is lexical; it cannot tell _showing_ a node from _archiving_ one.
 3. **A destructive command is refused unless you asked to destroy.** `node rm`, `gc`, `prune`,
    `--force`, `--reset` come back as a fallback when the intent was read-shaped. If you meant

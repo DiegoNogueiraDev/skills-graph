@@ -72,10 +72,10 @@ never code/git.** Top to bottom, obey every **STOP**/**DEFAULT**.
    **WHY** (one measurable win). Uncertainty rule: you can see how to build it → write
    tasks now; you cannot → add ONE `risk` node `spike: investigate <X>` and stop on that area.
 4. `agf generate-prd "<idea>"` (or `agf import-prd <file>`).
-5. Per epic: `agf node add --type epic …` with **Objective + 1 measurable Key Result**
+5. Per epic: `agf node add --type epic --title "..."` with **Objective + 1 measurable Key Result**
    in the description (a number/percent/latency — not "improve X").
 6. `agf decompose`. **Slice outside-in from the surface the user operates** (web → the
-   frontend screen; agf → the CLI command; API → the endpoint). Every leaf ≤2h and
+   frontend screen; `agf` → the CLI command; API → the endpoint). Every leaf ≤2h and
    self-sufficient:
    - each leaf = **ONE control on that surface proven end-to-end** (button/field/screen),
      not a backend layer — e.g. "the _Run_ button on the rules screen returns true/false",
@@ -203,7 +203,7 @@ Read the project's real state across **three surfaces**, not just the graph:
 
 ```bash
 agf preflight "<theme>"                  # WIP/dedupe/branch guard — is another agent already on this?
-agf stats · agf insights bottlenecks · agf harness --violations · agf gaps --severity required
+`agf stats` · `agf insights bottlenecks` · `agf harness --violations` · `agf gaps --severity required`
 agf query --type epic --status backlog   # what's ALREADY planned — do not re-plan it
 ```
 
@@ -287,16 +287,16 @@ end-to-end runnable path (Pareto + JIT). Deeper stories stay as deferred
 
 #### Slice CONSUMER-SURFACE-FIRST (outside-in) — the DEFAULT decomposition axis
 
-agf is a factory that generates **N different apps** depending on what the dev drives it
+`agf` is a factory that generates **N different apps** depending on what the dev drives it
 toward. Whatever the app, the backbone starts where the **user actually operates** the
 product, and every slice must PROVE itself there. The surface differs per app; the axis
 is the same:
 
-| app kind         | consumer surface = where you slice first                                              |
-| ---------------- | ------------------------------------------------------------------------------------- |
-| web / admin      | **the screen + its controls** (a route, its buttons/fields/tables) — the primary case |
-| CLI (agf itself) | the **command** (`agf <cmd>` output)                                                  |
-| API / service    | the **endpoint** (request → response)                                                 |
+| app kind           | consumer surface = where you slice first                                              |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| web / admin        | **the screen + its controls** (a route, its buttons/fields/tables) — the primary case |
+| CLI (`agf` itself) | the **command** (output de `agf`)                                                     |
+| API / service      | the **endpoint** (request → response)                                                 |
 
 > **Por que outside-in vence** (Walking Skeleton de Cockburn, GOOS, OKR, estigmergia/ACO, Little's Law): [references/field-lessons.md](references/field-lessons.md) → "Fundações do outside-in". A regra está acima; a fundamentação é consulta.
 
@@ -410,7 +410,7 @@ graph never drift. `agf preset` sets the cycle's workflow rigor up front.
 ```bash
 agf gaps --severity required          # close every required gap (traceability, AC coverage)
 agf check <taskId>                    # per-task DoD; the planner bar is AC-present + AC-score ≥ 60
-agf gate <phase>                      # phase-readiness gate — confirm the phase with `agf gate --help`
+`agf gate <phase>`                      # phase-readiness gate — confirm the phase with `agf help`
 ```
 
 > **Jurisprudência desta etapa** (casos reais + o blind-spot que os produziu): [references/field-lessons.md](references/field-lessons.md) → seção "Step 5 — Close gaps & validate". Carregue sob demanda.
@@ -641,7 +641,7 @@ findings (continuous dogfood evolution).
 - **`edge add` is POSITIONAL:** `agf edge add <from> <to> --type <rel>` — there is **no**
   `--from/--to` (passing them silently no-ops). Relations you'll use: `depends_on`,
   `parent_of`, `implements` (task→requirement/contract), `consumes` (consumer→contract),
-  `related_to` (risk/perf→task). Confirm the live set with `agf edge add --help`.
+  `related_to` (risk/perf→task). Confirm the live set with `agf help`.
 - **AC is revisable in place (NOT write-once).** `node update --ac "<c1>" "<c2>" …` is
   repeatable and **REPLACES** the node's whole `ac[]` — it does **not** append, so to
   revise AC pass the COMPLETE set (the criteria you keep + the new ones). Edges are
