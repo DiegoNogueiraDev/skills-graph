@@ -29,7 +29,7 @@ trabalhe num worktree em `agent-graph-flow-ants/<id>`.
 ## 1. Portão de entrada (agf)
 
 ```bash
-export AGF_AGENT_ID=<id>; a(){ npx tsx src/cli/index.ts "$@"; }
+export AGF_AGENT_ID=<id>; a(){ npm run dev -- "$@"; }
 a stats --select data.byStatus          # task/bug fora de done = 0 (exceto o nó REL)
 a suite triage --run                    # sem nó main-red novo e real; flaky de carga é P3 e não bloqueia
 ```
@@ -51,8 +51,8 @@ node scripts/pack-offline.mjs --target-platform win32 --target-arch x64 --target
 ```
 
 Windows: o worktree precisa de `node_modules` real (`cp -cR`), symlink gera tarball quebrado.
-Envie ao servidor (`ssh agent-graph-flow`, `~/graph-cloud-flow/public/releases/`, com `.sha256` e `BUILDINFO`),
-rode `pm2 restart graph-flow` (o Next só serve o que existia ao subir) e confira baixando pela URL
+Envie ao servidor (`ssh "$AGF_SITE_HOST"`, pasta `public/releases/` do site, com `.sha256` e `BUILDINFO`),
+rode `pm2 restart "$AGF_SITE_PM2"` (o Next só serve o que existia ao subir) e confira baixando pela URL
 pública com `shasum -c`. O npm só publica com `vars.PUBLISH_NPM == 'true'` (hoje desligado).
 
 ## 4. Site (graph-cloud-flow)
@@ -78,7 +78,10 @@ Tudo que cita a versão: `grep -rl "<versão anterior>" app components public`. 
 headless com `--virtual-time-budget`; a captura sai em branco às vezes, repita. Rode `npm test` do site.
 
 **Deploy:** rsync dos arquivos alterados, depois
-`ssh agent-graph-flow 'cd ~/graph-cloud-flow && npm run build && pm2 restart graph-flow'`.
+`ssh "$AGF_SITE_HOST" "cd \"$AGF_SITE_DIR\" && npm run build && pm2 restart \"$AGF_SITE_PM2\""`.
+
+Host, pasta e processo do site vêm de `AGF_SITE_HOST`, `AGF_SITE_DIR` e `AGF_SITE_PM2`, definidos na máquina de quem publica.
+Não escreva os valores reais na skill: ela é pública.
 Confira em produção: `/`, `/features`, `/architecture`, `/skills` respondem 200 e mostram a versão nova.
 
 ## 5. Skills (agf → skills-graph → site)
@@ -100,7 +103,7 @@ Ponha isto no `CLAUDE.md`/`AGENTS.md` do projeto e na página de primeiros passo
 - **Toda saída é JSON** `{ok, data, meta}`; use `--select data.campo` para gastar menos tokens.
 - **Descoberta sob demanda:** `agf help`, `agf help <cmd>`, `agf retrieve-command "<intenção>"`, `agf skill list`,
   `agf constitution --show colony-constitution`. Não decore comandos.
-- **No repo do agf** rode pelo código (`npx tsx src/cli/index.ts`), nunca o binário instalado.
+- **No repo do agf** rode pelo código (`npm run dev -- <cmd>`, ~3-4x mais rápido que `npx tsx`), nunca o binário instalado.
 - **Custo:** `agf metrics`, `agf savings`, `agf economy list`. Nada liga sem medição.
 - **Honestidade:** ponta solta vira nó `risk`; "done" só vale com critério ↔ código ↔ teste no disco.
 
