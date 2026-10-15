@@ -353,8 +353,8 @@ a new `agf` subcommand rather than bending an existing one. Zero risk: nothing c
 unless a user explicitly does.
 
 **Rigor check when a wire's integration test passes green on the first run** (no visible
-RED): don't just trust it — `git stash -- <implementation-file>` to temporarily remove the
-wire, re-run the test to confirm it now fails for the right reason, then `git stash pop`.
+RED): don't just trust it — revert the implementation file in a scratch commit (or `git checkout origin/main -- <implementation-file>`),
+re-run the test to confirm it now fails for the right reason, then restore it from your branch. Never stash: commit WIP on the branch and hand off by branch (rule 7 in _shared.md).
 Proves the test is actually anchored to your change, not passing by coincidence.
 
 > **Orçamento desta skill:** o corpo tem teto medido (ver `src/tests/skill-size-budget.test.ts`).
@@ -490,6 +490,19 @@ Proves the test is actually anchored to your change, not passing by coincidence.
   folhas legítimas continuam sendo cobradas; remover a cobrança impossível não pode remover o
   sinal.
 
+## Códigos de erro do builder — ação esperada
+
+Quando `agf next`, `agf node status done` ou `agf submit` recusam, o código diz o que fazer:
+
+| Código                | Quando aparece                                               | Ação esperada do agente                                                                                                       |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `WIP_EXCEEDED`        | Já há task `in_progress` nesta sessão                        | Termine ou reporte a task atual antes de puxar outra (WIP = 1). Não use `--force`.                                            |
+| `HOOK_DENIED`         | Um hook de fechamento bloqueou a transição                   | Leia o motivo do hook e corrija a causa. Não contorne o hook.                                                                 |
+| `HOOK_TIMEOUT`        | Um hook de fechamento estourou o limite de tempo             | Rode o fechamento de novo. Se repetir, avise o leader (o hook está lento).                                                    |
+| `NO_TESTS_EXECUTED`   | O runner saiu verde sem rodar nenhum teste                   | Declare os arquivos de teste da task com `agf node update <id> --test-files …` ou passe `--test-cmd`.                         |
+| `LEDGER_WRITE_FAILED` | O log de custo não gravou                                    | Confira o banco (lock, tabela) e apague `workflow-graph/ledger-failures.log`. O fechamento segue, só o custo fica incompleto. |
+| `HARNESS_UNMEASURED`  | Só parte do peso do harness foi medida, então o grau sai N/A | Rode `agf harness` completo antes do deploy. Não trate N/A como aprovado.                                                     |
+
 ## Anti-Patterns
 
 - Do NOT plan/PRD here — consume the backlog; planning is `graph-backlog-generation`
@@ -510,7 +523,7 @@ recover the exact command with `agf retrieve-command "<intenção>"`; delegate w
 and `agf savings`. Reallocators reshape (saved≈0); cutters reduce input tokens.
 
 **Route the call by cost (3rd pillar):** `agf provider use <id>` picks the gateway and
-`agf model` / `--pin <model>` the tier — let the tier-router auto-pick (cheap→build→
+`agf model set <id>` fixes the model (`agf model set auto` restores routing) — let the tier-router auto-pick (cheap→build→
 frontier by task complexity) or pin a cheap model for mechanical work. Every call is
 attributed per-node in the `llm_call_ledger`; `agf metrics --simulate` re-prices the
 real bill under any model.

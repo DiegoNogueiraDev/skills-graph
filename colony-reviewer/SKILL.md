@@ -22,6 +22,11 @@ Os papéis, a autoridade e o git estão na constituição, não aqui:
 agf constitution --show colony-constitution   # bundle colony-constitution
 ```
 
+## De onde vem a fila
+
+`agf colony dispatch` → `data.merges`: branches entregues e aguardando merge. Não
+garimpe o git à mão. Branch própria cai em `SELF_MERGE`: ela vai para o outro revisor.
+
 ## Quando bloquear o merge
 
 - **Sempre:** P1, e qualquer mudança que toque store, gateway ou segurança.
@@ -32,6 +37,14 @@ agf constitution --show colony-constitution   # bundle colony-constitution
 1. Branch@sha e a task no grafo batem com o que a formiga reportou.
 2. Testes e prova no modo do consumidor foram rodados e estão no relatório.
 3. O diff fica dentro do escopo do nó (sem arquivo de outra formiga).
+
+## Veredito e o que ele grava
+
+- **APROVADO:** `agf ant merge <branch> --push`.
+- **REPROVADO:** devolva com o `code` do gate e o nó em `blocked` com o motivo; a formiga
+  corrige na mesma branch.
+- **COM RESSALVAS:** mergeia e abre um nó de follow-up para cada ressalva, na frente da
+  dona. Ressalva sem nó se perde.
 
 ## O que você não faz
 

@@ -490,7 +490,7 @@ Output is compressed automatically with `--ai`; project with `--select <path>`; 
 the exact command with `agf retrieve-command "<intenção>"`; reuse before you create.
 Opt-in levers via `agf economy on <lever>` (`ncd_dedup`, `mdl_select`, `info_bottleneck`…);
 measure with `agf metrics --economy-report` and `agf savings`. Route by cost with
-`agf provider use <id>` + `agf model`/`--pin` (cheap model for mechanical fixes, frontier
+`agf provider use <id>` + `agf model set <id>` (cheap model for mechanical fixes, frontier
 only for hard root-cause). Hunting (Step 1) is deterministic and ~0 token by design.
 
 See `_shared.md` → **Token Economy** for the full arsenal: gateway auto-levers

@@ -84,11 +84,9 @@ aperta (node_891dff815566).
   file, or repoint a stale reference with `agf node update <id> --test-files|--implementation-files
 <real files…>` — never `--force` past it just to go green (that re-creates the hallucination).
 - `agf done` runs the **full** suite by default. A _pre-existing, unrelated_
-  failure will block it. Confirm it is not yours: `git stash -u` → rerun the
-  failing test → `git stash pop`. If it fails on clean `main`, it is pre-existing.
-  **In a SHARED tree (colony), never stash — it sweeps the other ant's dirty files
-  (rule 4).** Colony-safe proof: `git worktree add <tmp> origin/main` + symlink
-  `node_modules` → run the failing test there → `git worktree remove --force`.
+  failure will block it. Confirm it is not yours: run the failing test on clean `main`;
+  if it fails there, it is pre-existing. **Never stash — the stash is shared across worktrees and sweeps
+  the other ant's files (rule 4). commit WIP on the branch and hand off by branch (rule 7 in \_shared.md).** Colony-safe proof: `git worktree add <tmp> origin/main` + symlink `node_modules` → rerun → `git worktree remove --force`.
   A throwaway _verification_ worktree is fine (the rejection of worktree-per-ant
   is about _working_ there); it proves pre-existence without touching the tree.
   Then file the bug node and, for a push blocked only by that proven-foreign
@@ -202,8 +200,8 @@ Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
   file _after_ your commit** (a long line wrapped, an import re-sorted); (2) the **`done`
   hooks regenerate marker-wrapped context files** (CLAUDE.md · AGENTS.md · `.cursor` ·
   `.github/copilot-instructions.md` · generated command-surface). Neither is yours to
-  claim. Fix: `git stash push -- <foreign paths>` before the next `done`, pop after; sweep
-  them periodically in a separate `chore(docs)`/`style` commit. Do NOT `--force` past the
+  claim. Fix: commit your own work first so the tree holds only the foreign paths (never stash), then sweep
+  them in a separate `chore(docs)`/`style` commit. Do NOT `--force` past the
   gate — that skips the tests too.
 
 - **Backticks in a double-quoted commit message are executed by the shell, not printed.**
@@ -339,9 +337,9 @@ Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
   inward. Earned when a memory map documented "never raises" (losing learning must not kill a
   running test) while the operator command needed corruption to be fatal.
 
-- **Formatter churn you keep stashing will keep coming back — commit the sweep once.** If a
-  save/commit hook reformats your files and you stash them each time the done-gate complains
-  about scope, they return every cycle and cost a stash per task forever. The loop ends by
+- **Formatter churn you keep reverting will keep coming back — commit the sweep once.** If a
+  save/commit hook reformats your files and you undo them each time the done-gate complains
+  about scope, they return every cycle and cost a revert per task forever. The loop ends by
   committing the formatting as its own `style` commit. If it recurs after that, the real cause
   is upstream (you are writing lines the formatter rewrites, or two tools disagree) — fix that
   rather than paying the toll again.
@@ -1450,3 +1448,22 @@ campo lido é `costPerSuccess` (não `costUsd`) e o parâmetro é um MAPA (não 
 lista de linhas). Um mapa vazio faz o laço não iterar e o gate "passa" sem ter
 comparado nada. Quando um teste novo acusa defeito em código antigo e testado,
 a fixture é a primeira suspeita.
+
+## Fechamento — lições de gates e hooks (pheromones E01–E06)
+
+- **Migração nova contra o grafo central trava a colônia inteira.** Uma migração que sobe o schema
+  (ex.: v201) aplicada no `AGF_GRAPH_ROOT` central faz o `agf` de toda outra formiga recusar o grafo
+  com `DB_NEWER_THAN_BINARY`, porque o binário delas é mais antigo. Causa: o schema é do banco, não do
+  branch. Ação: teste migração em um banco temporário; nunca rode migração nova no grafo vivo. (`pheromone-db-newer-than-binary`)
+- **Hook duplicado escreve a mesma entrada duas vezes.** Instaladores que gravam o caminho relativo e o
+  `$CLAUDE_PROJECT_DIR` produzem duplicata, e o hook roda em dobro. Ação: uma grafia só, com
+  deduplicação por identidade (`collapseHook`), e um teste de convenção que guarda a regra. (`pheromone-hook-dedupe`)
+- **Task que só apaga arquivo passa no escopo, mas reprova no gate de fantasma.** O gate de arquivo
+  declarado ignora o que aparece como removido no diff, mas um deleção já commitada (árvore limpa)
+  não entra no diff. Ação: declare o arquivo apagado em `--implementation-files`; não conte com o
+  diff para cobrir uma deleção antiga. (`pheromone-deletion-only-close`)
+- **Gate de parada precisa de contador de loop.** Um gate `stop` que bloqueia o fim do turno pode
+  entrar em laço. O contador por sessão (`stop_guard_blocks:<session>`) é a trava. Ação: qualquer gate
+  que bloqueia saída tem contador e limite, senão a sessão não encerra. (`pheromone-gate-stop`)
+- **Ref abreviada de commit não se busca pelo nome.** `git fetch` não aceita sha curto como refspec.
+  Ação: busque por inteiro (`init` + `fetch` completo) e depois faça `checkout` do sha. (`pheromone-skill-ref-sha`)

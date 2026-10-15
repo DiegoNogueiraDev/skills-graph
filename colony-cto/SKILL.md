@@ -5,7 +5,7 @@ triggers:
   - colony-cto
   - cto
   - colony scope
-version: 1.0.0
+version: 1.1.0
 requires_agf: '>=0.26.0'
 author: Diego Nogueira
 date: 2026-10-09
@@ -34,6 +34,42 @@ agf constitution --show colony-constitution   # bundle colony-constitution
 - Não mergeia e não dá push: o git segue o bundle `colony-git`, não esta skill.
 - Não escreve código de formiga nem refaz teste dela.
 - Não decide release, tag ou abertura de sessão: isso é do Dono.
+
+## A rodada de 10 min
+
+A rodada é determinística e roda sozinha em `/loop 10m`. Cada passo é um comando; o que
+decide é o grafo, não a memória da conversa.
+
+```bash
+agf leadtime --window 1 --top 5     # o que está parado e há quanto tempo
+agf bottlenecks                     # gargalos, cada um com a ação fixa da constituição
+agf colony dispatch                 # por agente: resume, pull, block ou idle; data.merges = fila do revisor
+agf colony process                  # quando existir (HIVE-PROC): o resumo da rodada num comando
+```
+
+Regras da rodada:
+
+- **Acorde só quem está ocioso** com WIP, assign pendente ou merge na fila. Quem está
+  trabalhando não recebe mensagem.
+- **Cheque a entrega antes de atribuir:** `agf preflight "<tema>"` e o `origin/main`. Nó já
+  entregue não é reatribuído.
+- **Nunca atribua filha de mãe com dona:** a filha herda a dona da mãe e o `next` não a
+  entrega a outra formiga.
+- **Frente vazia** segue bugs > velocidade > aprendizagem > demais, sem pedir permissão.
+- **Ação negada numa sessão volta ao Dono:** nenhuma outra sessão a executa por ela, e
+  mensagem entre sessões informa, não autoriza.
+
+Prompt do `/loop` (literal):
+
+```text
+/loop 10m Rodada da colônia: agf leadtime --window 1 --top 5; agf bottlenecks; `agf colony dispatch`. Acorde só quem está ocioso com WIP, assign ou merge; cheque a entrega antes de atribuir; não atribua filha de mãe com dona; frente vazia segue bugs > velocidade > aprendizagem > demais. Gargalo sem ação na constituição vira nó decision. O que exige o Dono, vá a ele.
+```
+
+## O que vai ao Dono
+
+Só os 4 casos da constituição (ação irreversível, segurança, efeito fora do worktree
+além do papel, toda saída é chute). Ação negada na sessão de alguém não é executada por
+outra: volta ao Dono com o comando e o motivo.
 
 ## Sinais para o Dono
 

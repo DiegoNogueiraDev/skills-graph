@@ -60,6 +60,10 @@ the human can unblock your session.
 - Stop and ask the leader before you start when: `next` returns `NO_TASKS`; the
   task is a parent whose children are open; the task is assigned to someone else;
   or it touches a file another ant has in flight (`agf claims --colony`).
+- Do not pull a child task whose parent has an owner: the child inherits the parent's
+  owner and `next` never hands it to another ant. Ask the leader.
+- An empty front is not a question: pull in the order bugs > velocidade > aprendizagem >
+  the rest, without asking.
 - WIP = 1. Do not pull a second task while one is open or uncommitted in your
   worktree — a second task mixes files into the first one's commit.
 
@@ -69,6 +73,8 @@ Follow graph-builder-leafcutter for the cycle. Colony-specific points:
 
 - Test only what changed during the task; the blast gate and the pre-push hook are
   the wide net. Do not run the full suite.
+- Do not export a helper only for a test: `check:dead-exports` rejects it at merge. Test
+  through the public entry point, or keep the helper module-private.
 - A test that fails before your change is not yours: show it fails the same on
   `HEAD` without your change, then register it as a `risk`.
 - An AC you cannot meet as written (a wrong number, a missing input) is a decision
@@ -93,7 +99,9 @@ path (exit 1, a refusal, a deny), prove that path too.
 The report is the graph. Put the fields below in the JSON of
 `agf submit <id> --result '…'`, then leave the leader a notice with the node id and
 `branch@sha` (`agf colony notice leader-agf "…"`) so it shows on their next `agf next`.
-Send a session message only when you are blocked and cannot wait for the next round.
+Hand off with `agf colony handoff` (HIVE-PROC-3) instead of a session message — when it
+exists; until then the notice above is the handoff. Send a session message only when you
+are blocked and cannot wait for the next round.
 
 ```
 <node id> (<title>) done.
