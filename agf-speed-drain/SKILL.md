@@ -10,7 +10,7 @@ triggers:
   - ciclo rápido
   - enriquecer backlog
   - decompor
-version: 2.3.0
+version: 2.4.0
 requires_agf: '>=0.27.0'
 author: Diego Nogueira
 date: 2026-10-21
@@ -67,6 +67,7 @@ O alvo de 2-3 min é **por task**. Pedido grande: cada leaf cabe no alvo; o inta
 ## Fase A — Intake e backlog do pedido (plan-only, sem código)
 
 Use quando o pedido não tem épico/tasks prontos. Se já existe backlog pronto, pule para a Fase C.
+Se `agf bottlenecks` mostrar `queue-inflow` ou `done-unmerged`, drene a fila antes de criar tasks novas.
 
 1. **Investigue antes de planejar** (não duplique):
    ```bash
@@ -257,15 +258,9 @@ decomponha o item da cauda antes de qualquer outra coisa. Gargalo sem ação fix
 
 ## Gestão da entrega (placar a cada ~5 tasks)
 
-```bash
-agf stats --select data.byStatus
-agf leadtime --window 1 --top 5
-agf bottlenecks
-agf metrics --select data.summary      # tokens/$ por task (economia)
-```
-
+Comandos: `agf stats`, `agf leadtime`, `agf bottlenecks`, `agf metrics` (ver Performance, item 3).
 Gargalo com ação fixa: fazer a ação. Gargalo sem ação fixa: `agf node add --type decision`
-com o custo se errado. Task `in_progress` há mais de 4 h: cobre o dono ou reatribui.
+com o custo se errado. Task `in_progress` há mais de 4 h: cobra o dono ou reatribui.
 
 ## Sinais de que o modo rápido não serve mais
 
