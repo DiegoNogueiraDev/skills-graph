@@ -17,15 +17,15 @@ aperta (node_891dff815566).
   A shipped command must also be **discoverable** — register it wherever the context/RAG
   index derives from, or it stays invisible to the next agent even though it runs.
 
-- **GOTCHA — `agf next` has NO epic/tag/session scope.** It picks 100% globally by
+- **GOTCHA — **agf next** has NO epic/tag/session scope.** It picks 100% globally by
   priority, then by smallest id (FIFO) among unblocked tasks. Priority ≠ recency: an
   OLD task from another PRD with the same priority beats a freshly-planned one just by
   having a lower id (by design, not a bug). So when your intent is to continue a
   specific epic you (or the planner) just built, **do NOT accept the global pull
-  blindly** — check the returned id belongs to the target epic (`agf node show <id>`
+  blindly** — check the returned id belongs to the target epic (**agf node show <id>**
   → confirm `parentId`); if it doesn't, pull the epic's tasks manually by id
-  (`agf node status <targetTaskId> in_progress`) instead of `agf next`. A correct
-  backlog (right parentId/AC/depends_on) does NOT make `agf next` epic-aware — the
+  (**agf node status <targetTaskId> in_progress**) instead of **agf next**. A correct
+  backlog (right parentId/AC/depends_on) does NOT make **agf next** epic-aware — the
   picker simply has no notion of "the epic I meant".
 
 - **GOTCHA — Commander.js silently drops a subcommand's own flag when the parent
@@ -77,13 +77,13 @@ aperta (node_891dff815566).
   explicitly run that layer's convention test alongside blast — earned when a fresh adapter imported
   `../cli` and blast stayed green while the isolation test was red on the full suite.
 
-- **Anti-hallucination gate (`PHANTOM_TESTFILE`).** `agf done` now refuses a task whose declared
+- **Anti-hallucination gate (`PHANTOM_TESTFILE`).** **agf done** now refuses a task whose declared
   `testFiles` **or** `implementationFiles` do **not** exist on disk — a delivery no real code/test
   backs. This is the AC ↔ code ↔ **physical test** triangulation (both axes) enforced on entry, and
   it applies to ANY project `agf` drives (resolved against `--dir`). Fix it honestly: write the missing
   file, or repoint a stale reference with `agf node update <id> --test-files|--implementation-files
 <real files…>` — never `--force` past it just to go green (that re-creates the hallucination).
-- `agf done` runs the **full** suite by default. A _pre-existing, unrelated_
+- **agf done** runs the **full** suite by default. A _pre-existing, unrelated_
   failure will block it. Confirm it is not yours: run the failing test on clean `main`;
   if it fails there, it is pre-existing. **Never stash — the stash is shared across worktrees and sweeps
   the other ant's files (rule 4). commit WIP on the branch and hand off by branch (rule 7 in \_shared.md).** Colony-safe proof: `git worktree add <tmp> origin/main` + symlink `node_modules` → rerun → `git worktree remove --force`.
@@ -91,30 +91,30 @@ aperta (node_891dff815566).
   is about _working_ there); it proves pre-existence without touching the tree.
   Then file the bug node and, for a push blocked only by that proven-foreign
   failure, bypass the hook citing the proof — never bypass on an unproven red.
-- `agf done --test-cmd "npm run test:blast"` can fail with a **DB lock / code 1
+- **agf done --test-cmd "npm run test:blast"** can fail with a **DB lock / code 1
   when the changed set is wide** (done holds `graph.db` open while spawning the
   gate) even though blast passes standalone. Workaround: run blast standalone for
   real coverage (above), then give `done` a _targeted_ receipt:
-  `agf done --test-cmd "npx vitest run <changed-area test files>"`.
+  **agf done --test-cmd "npx vitest run <changed-area test files>"**.
 
 - **Closing a `risk`/spec node whose mitigation you just built:** the task-DoD `done`
-  gate requires acceptance criteria, and a `risk` node has none — so `agf done` will
+  gate requires acceptance criteria, and a `risk` node has none — so **agf done** will
   fail on `has_acceptance_criteria`. That is a node-shape mismatch, NOT a false pass:
   the honest signal is your real gates (blast + `check` + `harness` green + the test
   proving the behavior). Close it with the raw forward transition (`agf node status
-<id> done`), not `agf done`. Never invent AC just to satisfy the task gate.
+<id> done`), not **agf done**. Never invent AC just to satisfy the task gate.
   The same applies to a **measurement/VALIDATE task whose deliverable is
-  ledger/db evidence, not source** (an A/B run, a benchmark): `agf done` will
+  ledger/db evidence, not source** (an A/B run, a benchmark): **agf done** will
   refuse with NO_FILES_MODIFIED because nothing tracked changed — the honest
   close is the raw transition backed by the recorded numbers (decision node +
   green receipt tests), never a fake source edit to appease the gate.
 
 - Pre-existing failure, a bug you discovered, or a deferred integration →
-  `agf node add --type risk|task …` **before** `done`. Then complete your task on
+  **agf node add --type risk|task …** **before** `done`. Then complete your task on
   the real gate. Never mark done on a false claim (anti-vibe-coding).
 
-Fold REVIEW (`agf insights` / blast radius), HANDOFF (`agf memory write`,
-`agf snapshot`), and LISTENING (DORA retro) into the close-out.
+Fold REVIEW (**agf insights** / blast radius), HANDOFF (**agf memory write**,
+**agf snapshot**), and LISTENING (DORA retro) into the close-out.
 
 **Close-out mechanics (the boring failures that eat a real loop — earned repeatedly):**
 
@@ -1155,7 +1155,7 @@ for live runs.
 
 **Instrumenting the colony (the operator-facing "how to turn it on").** The section above
 is the _why_; this is the durable _how_, command-agnostic (the exact verbs always come
-from `agf help` / `agf retrieve-command`, never hardcoded here):
+from **agf help** / **agf retrieve-command**, never hardcoded here):
 
 - **It is a second binary in the SAME repo, not a separate package.** Building the repo
   produces the colony bin alongside the main one; it becomes reachable to the opt-in flag
@@ -1187,7 +1187,7 @@ from `agf help` / `agf retrieve-command`, never hardcoded here):
 
 **Ao mover conteúdo em massa por regra de FORMA (tamanho, regex, posição), rode a suíte
 COMPLETA — não o gate incremental.** Uma extração de "todo bullet com ≥5 linhas" levou junto uma
-instrução operacional (`agf submit`, como uma task delegada fecha) que uma guarda de convenção
+instrução operacional (**agf submit**, como uma task delegada fecha) que uma guarda de convenção
 exigia no corpo. Critério de forma não distingue jurisprudência de instrução. E o gate de
 pre-push não viu: ele roda testes relacionados ao range commitado, e teste de convenção que lê
 arquivos por `fs` é invisível ao grafo de imports. O que quebra nesse tipo de refactor é
@@ -1232,7 +1232,7 @@ Corolário de projeto: exija que o campo derivado e o número bruto CONCORDEM
 (`recommendation` vs `savedTokens`); divergência é fail-safe OFF, nunca "escolha o
 mais otimista dos dois".
 
-**2. Superfície viva ≠ capacidade viva.** `agf economy ab-lever` existe, tem help,
+**2. Superfície viva ≠ capacidade viva.** **agf economy ab-lever** existe, tem help,
 está no índice do RAG e devolve `ok:true` — e nunca pôde produzir dado: o CLI passa
 `NO_LIVE_LEVER_AB_EXECUTOR`, cujo `available()` é `false` por construção. Com a
 chave carregada do `.env.local` e o provider selecionado, ainda volta `delegated`.

@@ -10,7 +10,7 @@ lida inteira em toda invocação (node_891dff815566).
 If you catch yourself opening an editor, creating a `*.ts` / `*.test.ts` file, or
 editing a source file — **STOP: you have left the planner.** Revert it and put the
 intent into a task node instead. Implementation and the TDD that proves it belong to
-`graph-builder-leafcutter`, pulled later via `agf start`.
+`graph-builder-leafcutter`, pulled later via **agf start**.
 
 ## Step 1 — Investigate & find white space (dogfood)
 
@@ -33,12 +33,12 @@ only when the user already named the exact scope.
 ## Step 5 — Close gaps & validate
 
 **Verify before you call (command-agnostic).** Phase names and flags drift between
-versions — `agf gate analyze` does **not** exist in current builds (valid phases:
-`design · review · handoff · deploy · listening · all`), and `agf gaps` may not
+versions — **agf gate analyze** does **not** exist in current builds (valid phases:
+`design · review · handoff · deploy · listening · all`), and **agf gaps** may not
 accept `--json` yet (parse the text envelope or use `--select`). Always confirm with
-`agf help` (or `agf retrieve-command`) rather than assuming.
+**agf help** (or **agf retrieve-command**) rather than assuming.
 
-**`agf gaps` scans the WHOLE graph, not your subtree.** In a repo with a 1000+ node
+**agf gaps scans the WHOLE graph, not your subtree.** In a repo with a 1000+ node
 backlog it returns piles of _pre-existing_ required gaps that are **not yours** — do
 not chase them. Filter the report to the node ids you just created (grep your ids) and
 close only those; `ready: false` and a red DoR gate usually reflect the whole graph,
@@ -59,7 +59,7 @@ own `ac[]` legitimately stays empty). And treat `status_flow_valid` + `no_unreso
 passed through `in_progress` — the planner bar remains AC-present + AC-score >= 60 + subtree
 required-clean.
 
-**What "validated" means for fresh planner backlog.** `agf check` on a backlog task
+**What "validated" means for fresh planner backlog.** **agf check** on a backlog task
 will report `status_flow_valid: failed` — that is **expected and correct**, not a
 planning defect: the task hasn't been taken through `in_progress → done` yet (that's
 the builder's job). The binding signal for planning quality is **AC present on every
@@ -85,7 +85,7 @@ gets silently re-litigated cycles later. Run the adversarial ADR-challenge gate 
 can pass it on substance while a separate format grader still scores it low (see the
 opaque-heuristics rule: don't chase the grader).
 
-**Planner DoD — sweep ALL injected nodes before stopping.** Loop `agf node show` over
+**Planner DoD — sweep ALL injected nodes before stopping.** Loop **agf node show** over
 every new id and assert: each task has ≥1 AC; each non-epic node has a `parentId`;
 epics are roots (`parentId` null) and carry an Objective + KR; `depends_on` edges
 wired. Cheap, deterministic, and catches a half-built tree before the human (or the
@@ -101,7 +101,7 @@ while its task list was empty, because the fields sat one level deeper than the 
 **Definition of Ready (the stop gate).** Beyond per-task AC, the backlog as a whole
 must pass DoR's **7 checks** (`has_requirements`, `has_acceptance_criteria`,
 `no_orphans`, `no_cycles`, `has_constraints`, `has_risks`, `prd_quality_score ≥ 60` —
-owned by `agf gate`; confirm the phase via `--help`). DoR green **+** AC present on
+owned by **agf gate**; confirm the phase via `--help`). DoR green **+** AC present on
 every task with AC-score ≥ 60 = ready to stop. Unresolved Example-Map questions or
 unmapped Impact-Map deliverables block DoR — park them as `risk` nodes or
 loop back to DESIGN first.
