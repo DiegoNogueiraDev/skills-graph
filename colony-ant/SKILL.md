@@ -36,16 +36,16 @@ the human can unblock your session.
 
 ## The cycle
 
-| #   | Step                 | Command                                                            | Owner skill              |
-| --- | -------------------- | ------------------------------------------------------------------ | ------------------------ |
-| 1   | Get the task         | `agf next --agent <you> --scope frente-<x>` (assigned task first)  | —                        |
-| 2   | Claim it             | `agf node status <id> in_progress`                                 | —                        |
-| 3   | Check for duplicates | `agf preflight "<topic>"` · `agf context <id>`                     | graph-builder-leafcutter |
-| 4   | Build with TDD       | red → green → refactor                                             | graph-builder-leafcutter |
-| 5   | Verify               | test file · `npm run test:blast` · `tsc` · lint · `agf check <id>` | graph-builder-leafcutter |
-| 6   | Prove as a user      | run the real command / open the real screen                        | —                        |
-| 7   | Close and commit     | `agf node status <id> done` · one commit on `ant/*`                | —                        |
-| 8   | Report               | message to the leader (format below)                               | —                        |
+| #   | Step                 | Command                                                                                                                | Owner skill              |
+| --- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 1   | Get the task         | `agf next --agent <you> --scope frente-<x>` (assigned task first)                                                      | —                        |
+| 2   | Claim it             | `agf node status <id> in_progress`                                                                                     | —                        |
+| 3   | Check for duplicates | `agf preflight "<topic>"` · `agf context <id>`                                                                         | graph-builder-leafcutter |
+| 4   | Build with TDD       | red → green → refactor                                                                                                 | graph-builder-leafcutter |
+| 5   | Verify               | test file (T0) · sampled related tests (T1) · `tsc` · lint · `npx prettier --write <touched files>` · `agf check <id>` | graph-builder-leafcutter |
+| 6   | Prove as a user      | run the real command / open the real screen · keep it as one command                                                   | —                        |
+| 7   | Close and commit     | `agf node status <id> done` · one commit on `ant/*`                                                                    | —                        |
+| 8   | Report               | message to the leader (format below)                                                                                   | —                        |
 
 ### 1–2 — Get and claim
 
@@ -71,8 +71,12 @@ the human can unblock your session.
 
 Follow graph-builder-leafcutter for the cycle. Colony-specific points:
 
-- Test only what changed during the task; the blast gate and the pre-push hook are
-  the wide net. Do not run the full suite.
+- Before coding, write the proof command: put it in the AC as `agf …` in backticks, or take the
+  line `agf brief <id>` prints (`agf submit <id> --consumer-proof "<cmd>"`). Step 7 only runs it.
+- Run `npx prettier --write <touched files>` before the commit: `merge-gate:prettier` only fails at
+  `ant merge`, after the DoD already passed, and sends the branch back to you.
+- Test only what changed during the task; the T1 sample, the merge smoke (T2) and the
+  background full suite (T3) are the wide net. Do not run the full suite.
 - Do not export a helper only for a test: `check:dead-exports` rejects it at merge. Test
   through the public entry point, or keep the helper module-private.
 - A test that fails before your change is not yours: show it fails the same on
@@ -89,6 +93,8 @@ path (exit 1, a refusal, a deny), prove that path too.
 
 ### 7 — Close and commit
 
+- Record the proof: `agf submit <id> --consumer-proof "<command>"` (runs on base and HEAD,
+  needs exit 0 and different output). Without it the `consumer_proof` check fails at done.
 - `agf node status <id> done` goes through the DoD gates. Never `--force`. If a gate
   refuses a correct delivery, stop and report it — the leader decides.
 - One commit per task, title ≤ 100 characters, on your own `ant/*` branch.
@@ -106,7 +112,7 @@ are blocked and cannot wait for the next round.
 ```
 <node id> (<title>) done.
 Branch: ant/<you> @ <sha>
-Tests: <file tests> · blast <files/tests> · tsc · lint
+Tests: <file tests> · T1 sample <files/tests> · tsc · lint · prettier --write <touched files>
 Consumer proof: <command run> → <what was seen>
 DoD: ready=<true|false>, score <n>
 Findings: <risk node ids, one line each>

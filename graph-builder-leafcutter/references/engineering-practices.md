@@ -53,7 +53,7 @@ Recreating from scratch is the #1 failure of the build loop. Before writing ANY 
 - **Green** → minimal code to pass.
 - **Refactor** → apply Clean Code + SOLID, tests stay green, no regressions.
 - One assertion focus per test; positive + negative + edge cases; descriptive names
-  (`calculates_discount_when_qty_over_10`). Verify with the project's blast gate.
+  (`calculates_discount_when_qty_over_10`). Verify with the T0/T1 test gate.
 
 ## XP practices
 
@@ -82,7 +82,7 @@ at close-out (SKILL.md Step 4):
 | ----------------------------------------------------------- | --------------------------------------------------------------- |
 | Clean Code · SOLID · naming · error handling · file/fn size | `agf harness --violations`                                      |
 | TDD quality (coverage, assertion diversity)                 | `agf tdd-score <id>` + `agf check <id>`                         |
-| Transitive coverage of the change (no regression)           | `npm run test:blast` (standalone)                               |
+| Transitive coverage of the change (no regression)           | T1 sample of related tests (`agf done` runs it)                 |
 | Robustness (tests actually catch breakage)                  | `agf check <id> --mutation --source <file>` (kill-ratio ≥ 0.60) |
 | Definition of Done (required checks)                        | `agf check <id>` / `agf done <id>`                              |
 

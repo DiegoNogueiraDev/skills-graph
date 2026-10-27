@@ -33,7 +33,7 @@ graph-economy levers.
 4. **Investigate & reuse** — `agf preflight` + `rg`/`agf search` for the owning module;
    EXPAND, don't recreate (see engineering-practices.md). Then `agf node status <id> in_progress`.
 5. **Build** — TDD Red→Green→Refactor with the economy arsenal below + Clean Code/SOLID.
-6. **Verify (gates)** — `npm run test:blast` (standalone) + `agf check <id>` + `agf tdd-score <id>`
+6. **Verify (gates)** — task tests (T0) + T1 sample (standalone) + `agf check <id>` + `agf tdd-score <id>`
    - `agf harness --violations` (opt-in `agf check --mutation` for robustness).
 7. **Close** — `agf done <id>` (DoD, epic promotion); fold review/handoff/listening.
 8. **Learn** — `agf savings` · `agf metrics --economy-report` · `agf learning` · deposit pheromone · `agf heal`.
@@ -63,4 +63,4 @@ graph-economy levers.
 
 - Surface loose ends as `risk`/`bug` nodes — never mark done with a false claim.
 - Do NOT count reallocator levers as token cuts (their saved is ~0 by design).
-- Do NOT skip the blast gate before `agf done`.
+- Do NOT skip the T0/T1 test gate before `agf done`.

@@ -111,7 +111,7 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    orphan that blocks the whole colony.
 6. Write the **failing test first** from the AC → run it → see it fail → minimal code to
    pass. No test written = **STOP** (TDD is mandatory).
-7. `npm run test:blast` → red? fix; **max 3 tries**, still red → `agf node add --type bug --title "..."`
+7. Task tests (T0) + sampled related tests (T1) → red? fix; **max 3 tries**, still red → `agf node add --type bug --title "..."`
    and **STOP**. Green → continue.
 8. `agf check <id>` → a required check fails → fix it, or file a `risk` node, then retry.
 9. `agf done <id>` → red on an **unrelated/pre-existing** test → `agf node add --type risk --title "..."`,
@@ -162,7 +162,7 @@ The project's golden rules, distilled for IMPLEMENT. Non-negotiable:
 ```
 scan (stats·harness·gaps) → next (WIP=1) → INVESTIGATE (preflight·rg·search → EXPAND, don't recreate)
   → mark in_progress → BUILD (TDD Red→Green→Refactor + Clean Code/SOLID + economy)
-  → self-review → GATES (blast·check·tdd-score·harness[·mutation]) → done (honest gate)
+  → self-review → GATES (T0/T1 tests·check·tdd-score·harness[·mutation]) → done (honest gate)
   → learn (pheromone) → select next by fitness (ACO + GA) → repeat until exhausted → restart
 ```
 
@@ -250,7 +250,7 @@ agf node status <id> in_progress  # claim it only AFTER you know what you'll tou
 left? did scope leak? are all AC covered? is the default still intact?
 
 ```bash
-npm run test:blast        # MANDATORY gate — run STANDALONE; must be green
+npx vitest run <task tests> # T0, run STANDALONE; must be green (agf done adds the T1 sample)
 agf check <id>            # DoD (required checks must pass)
 agf tdd-score <id>        # TDD quality 0–100 (coverage + assertion diversity)
 agf harness --violations  # Clean Code/SOLID/naming/errors enforced, not claimed
@@ -258,8 +258,9 @@ agf harness --violations  # Clean Code/SOLID/naming/errors enforced, not claimed
 agf done <id>             # marks done + suggests next
 ```
 
-**Hierarchical test gates (cost ∝ risk):** `npm run test:blast` per task (above);
-`npm run test:node` when an epic is promotion-ready; `npm test` once pre-PR. Promote a
+**Test layers (speed > cost):** T0 task tests + T1 sampled related tests per task (above);
+T2 smoke (`npm run test:smoke`) when the merge publishes; T3 full suite in the background after
+the merge (`node scripts/test-full-background.mjs`). Wide blast only with `AGF_BLAST_MODE=wide`. Promote a
 phase only through `agf gate <phase>` (DoD/harness/readiness) — e.g. `agf gate deploy`
 requires harness ≥ 70. Don't run the full suite per task; don't push on a red gate.
 
@@ -511,7 +512,7 @@ Quando `agf next`, `agf node status done` ou `agf submit` recusam, o código diz
 - Do NOT mark done on a false claim — file a risk/task node for any loose end
 - Do NOT claim savings a lever did not make — read the ledger (`agf metrics`)
 - Do NOT skip the quality gates — `agf tdd-score` + `agf harness --violations` enforce SWE practices
-- Do NOT mark done without `npm run test:blast` (standalone) + `agf check` green
+- Do NOT mark done without the T0/T1 tests (standalone) + `agf check` green
 
 ## Economy
 

@@ -37,7 +37,7 @@ As skills abaixo são a destilação desse ciclo em linguagem que qualquer agent
 
 ## As 28 skills
 
-Requer `agf >= 0.27.0`. Cada pasta traz o `SKILL.md` e, quando precisa, `references/` e `scripts/`.
+Requer `agf >= 0.27.0` (conferido com a 0.31.0). Cada pasta traz o `SKILL.md` e, quando precisa, `references/` e `scripts/`.
 
 ### Os 3 pilares (comece por aqui)
 

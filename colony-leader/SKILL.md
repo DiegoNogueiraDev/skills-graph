@@ -77,7 +77,7 @@ chat message is lost at the next round.
 Accept a task only when the report has all of these:
 
 - node id and `branch@sha`;
-- tests of the task, `npm run test:blast` (or the project's blast gate), `tsc`;
+- tests of the task (T0), the sampled related tests (T1), `tsc`;
 - **consumer-mode proof**: the real command or screen, what was run, what was
   seen. When the AC is a failure path (exit 1, a refusal), the proof must show
   that path, not only the happy one;

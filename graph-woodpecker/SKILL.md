@@ -117,7 +117,7 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    > the hard way: a `phantom_done` for `update-notifier`/`update-notify-cli` was "resolved" by
    > rebuilding — silently re-introducing the phone-home (leaked IP+version on every `agf` invocation)
    > that a prior commit had deliberately removed to make the tool local-first. The enforcement guard
-   > (`local-first-no-network.test.ts`) caught it, but **`npm run test:blast` (`vitest --changed`,
+   > (`local-first-no-network.test.ts`) caught it, but **the wide `--changed` run (`vitest --changed`,
    > module-graph) did NOT** — that guard reads source as a STRING (no import edge), so a per-task
    > blast never marks it affected. Lesson twofold: **check the reason for absence, not just the
    > absence**, and know that **content-scan guards are invisible to `--changed` blast** — run them
@@ -150,10 +150,10 @@ Workflow below is the same loop for stronger models; this is the compiled versio
    is a hot path. A silent failure path = not done.
 8. **Coverage gate ≥80%:**
    ```bash
-   npm run test:blast            # transitively-affected tests, standalone, must be green
+   npx vitest run <task tests>   # T0, standalone, must be green (agf done adds the T1 sample)
    agf tdd-score <id> --select data.score   # ≥80; below → add positive+negative+edge tests
    ```
-   Below 80% → keep adding tests (this is mandatory). **Max 3 fix tries** on a red blast;
+   Below 80% → keep adding tests (this is mandatory). **Max 3 fix tries** on a red test run;
    still red → `agf node add --type bug` and **STOP**.
 9. **Security pass (every fix):** run the OWASP/STRIDE checklist below; any new exposure
    → `agf node add --type risk`. Never introduce a `console.log`, secret, or `any`.
@@ -209,7 +209,7 @@ silent, mark done on a false claim, or hold >1 `in_progress`.
 HUNT (harness·gaps·lint·insights → findings) → FILE nodes (bug/risk) → pick by severity (WIP=1)
   → REPRODUCE (failing test, RED) → ROOT-CAUSE (5 Whys/bisect) → FIX minimal (GREEN)
   → OBSERVABILITY (log + metric on the failure/hot path) → COVERAGE ≥80% (tdd-score)
-  → SECURITY pass (STRIDE/OWASP) → GATES (blast·check·harness) → done (honest)
+  → SECURITY pass (STRIDE/OWASP) → GATES (T0/T1 tests·check·harness) → done (honest)
   → learn (pheromone) → repeat until no findings → re-scan
 ```
 
@@ -309,7 +309,7 @@ for existing tests → zero regression for free.
 ### Step 5 — GATES: coverage ≥80% + security + quality
 
 ```bash
-npm run test:blast                     # MANDATORY, standalone, green
+npx vitest run <task tests>            # T0, standalone, green (agf done adds the T1 sample)
 agf tdd-score <id> --select data.score # ≥80 required; add positive+negative+edge until met
 # optional robustness: agf check <id> --mutation --source <file>   # kill-ratio ≥0.60
 agf harness --violations               # Clean Code/SOLID/naming/errors enforced
